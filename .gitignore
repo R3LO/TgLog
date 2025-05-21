@@ -7,6 +7,8 @@ __pycache__/
 *.so
 
 # Distribution / packaging
+tgbot_QO100.db
+test.py
 .Python
 build/
 develop-eggs/
@@ -60,6 +62,7 @@ cover/
 local_settings.py
 db.sqlite3
 db.sqlite3-journal
+
 
 # Flask stuff:
 instance/

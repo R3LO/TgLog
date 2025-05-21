@@ -3,8 +3,10 @@ from aiogram.types import Message
 from aiogram.fsm.context import FSMContext
 from state.register import RegisterState
 from utils.database import Database
+from keyboards.menu_kb import main_menu
 import re
 import os
+import asyncio
 
 db = Database(os.getenv('DATABASE_NAME'))
 
@@ -34,5 +36,8 @@ async def register_name(message: Message, state: FSMContext, bot: Bot):
     msg = f'👌 Вы ввели: \n ✅ Позывной: <b>{reg_call}</b> \n ✅ Ваше имя: <b>{reg_name}</b>'
     await bot.send_message(message.from_user.id, msg)
     db.add_user(reg_call, reg_name, message.from_user.id)
+    await bot.send_message(message.from_user.id, '<b>Регистрация завершена успешно!</b> 👍 \n\n<i>Для продолжения работы выберите действие из главного меню</i>')
+    await asyncio.sleep(2)
+    await bot.send_message(message.from_user.id, '\n\n<b>☰ Главное меню</b>', reply_markup=main_menu())
     await state.clear()
     

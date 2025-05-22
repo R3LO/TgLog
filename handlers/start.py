@@ -1,7 +1,7 @@
 from aiogram import Bot
 from aiogram.types import Message
 from keyboards.register_kb import register_keyboard
-from keyboards.profile_kb import profile_kb
+from keyboards.main_kb import main_kb
 from utils.database import Database
 import os
 
@@ -9,7 +9,7 @@ async def get_start(message: Message, bot: Bot):
     db = Database(os.getenv('DATABASE_NAME'))
     users = db.select_user_id(message.from_user.id)
     if (users):
-        await bot.send_message(message.from_user.id, f'Здравствуйте <b>{users[1]}</b>! \n\n', reply_markup=profile_kb)
+        await bot.send_message(message.from_user.id, f'Для продолжения выберие действие по кнопкам ниже 👇\n\n', reply_markup=main_kb)
     else:
         await bot.send_message(message.from_user.id, f'Здравствуйте! \n\n'
                             f'Данный бот является частью группы 📡 <b>QO-100-RUSSIA</b> \n'

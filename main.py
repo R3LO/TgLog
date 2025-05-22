@@ -8,10 +8,12 @@ import os
 # from utils.commands import set_commands
 from handlers.start import get_start
 from handlers.register import start_register, register_call, register_name
+from handlers.CallBacksMenu import upload_adif
 from handlers.main_menu import main_menu
 from handlers.admin.raiting import create_raiting
 from handlers.CallBacksMenu import CallBaksMenu
 from state.register import RegisterState
+from state.uload_log import Upload_logState
 from filters.CheckAdmin import CheckAdmin
 
 
@@ -34,6 +36,7 @@ dp.message.register(start_register, F.text=='✅ РЕГИСТРАЦИЯ')
 dp.message.register(main_menu, F.text=='☰ Меню')
 dp.message.register(register_call, RegisterState.regCall)
 dp.message.register(register_name, RegisterState.regName)
+dp.message.register(upload_adif, Upload_logState.upload_adif)
 dp.message.register(create_raiting, Command(commands='raiting'), CheckAdmin())
 dp.callback_query.register(CallBaksMenu)
 

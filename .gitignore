@@ -8,6 +8,7 @@ __pycache__/
 
 # Distribution / packaging
 tgbot_QO100.db
+logs/
 test.py
 .Python
 build/

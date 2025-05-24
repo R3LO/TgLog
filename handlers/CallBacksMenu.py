@@ -7,6 +7,7 @@ from state.uload_log import Upload_logState
 from keyboards.inline_menu_kb import interlinemenu
 from utils.database import Database
 import os
+import re
 
 
 # from aiogram.types import Message, FSInputFile
@@ -42,16 +43,14 @@ async def upload_adif(message: types.Message, state: FSMContext, bot: Bot):
         file = 'logs\\' + users[1] + '_' + str(message.from_user.id) +'.txt'
         download_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), file)
         await message.bot.download(message.document, destination=download_path)
-        await bot.send_message(message.from_user.id, '👍 Дождитесь результата обработки...\n\n')
-        await bot.send_message(message.from_user.id, '✅ Лог получен. Обработка QRX...\n\n')
+        await bot.send_message(message.from_user.id, '✅ Файл загружен. Дождитесь результата...\n\n')
+        await bot.send_message(message.from_user.id, '✅ Файл получен. Обработка. QRX...\n\n')
         await adif(users[1], download_path, message, bot, state)
-
-        # await state.clear()
-        # await bot.send_message(message.from_user.id, 'Для продолжения выбирте действие', reply_markup=interlinemenu())
-
-
+        await bot.send_message(message.from_user.id, '✅ Вышел из режима загрузки лога. \n\n')
+        await state.clear()
+        await bot.send_message(message.from_user.id, 'Для продолжения выбирте действие', reply_markup=interlinemenu())
     else:
-        await message.reply("⛔️ Загрузка лога отменена")
+        await message.reply("⛔️ Загрузка лога отменена.")
         await state.clear()
         await bot.send_message(message.from_user.id, 'Для продолжения выбирте действие', reply_markup=interlinemenu())
 
@@ -59,20 +58,30 @@ async def upload_adif(message: types.Message, state: FSMContext, bot: Bot):
 
 
 async def adif(table_db: str, log: str, message: Message, bot: Bot, state):
-    f = open(log, 'r')
+    logbook = []
     try:
-        log = f.read().upper()
+        raw = re.split('<EOR>|<EOH>', open(log).read().upper(), flags=re.IGNORECASE)
     except:
-        pass
-    # db = Database(os.getenv('DATABASE_NAME'))
-
-    if ('<EOH>' in log) and ('<QSO_DATE:' in log) and ('<TIME_ON:' in log) and ('<BAND:' in log) and ('CALL:' in log) and ('<EOR>' in log):
-        await bot.send_message(message.from_user.id, '✅ ADIF теги в логе есть <i>(предварительная оценка)</i>...')
-        # log = log.replace("<", " <")
-        log = log.splitlines()
-        print(len(log))
-
-        await state.clear()
+        await bot.send_message(message.from_user.id, '❌ Это не файл ADIF лога')
+        return
+    n = 0
+    try:
+        for record in raw[1:-1]:
+            qso = {}
+            ADIF_REC_RE = re.compile(r'<(.*?):(\d+).*?>([^<\t\f\v]+)')
+            tags = ADIF_REC_RE.findall(record)
+            for tag in tags:
+                qso[tag[0].lower()] = tag[2][:int(tag[1])]
+                if (qso[tag[0].lower()] == 'MFSK'):
+                    qso[tag[0].lower()] = 'FT4'
+            n += 1
+            logbook.append(qso)
+    except:
+        await bot.send_message(message.from_user.id, '❌ Не найдены ADIF теги.')
+    if n > 0:
+        await bot.send_message(message.from_user.id, f'✅ В фвйле <b>{n}</b> QSO. QRX...')
     else:
-        await bot.send_message(message.from_user.id, '❌ Не найден како-то нужный тег.')
-        await bot.send_message(message.from_user.id, '🤷 Попробуйте еще раз загрузить 📎 исправленный log или введите слово <b>отмена</b> для выходя из режима загрузки лога 👇')
+        await bot.send_message(message.from_user.id, '❌ В файле нет данных о QSO. Обработка завершена.')
+        return
+
+   

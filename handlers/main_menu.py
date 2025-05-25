@@ -15,4 +15,4 @@ async def main_menu(message: Message, state: FSMContext, bot: Bot):
     if (users):
         await bot.send_message(message.from_user.id, f'➡️ Выберите действеие',reply_markup=interlinemenu())
     else:
-        await bot.send_message(message.from_user.id, f'⚠️ Вам необходимо зарегистрироваться!')
+        await bot.send_message(message.from_user.id, f'⚠️ Вам необходимо зарегистрироваться! Введите /start')

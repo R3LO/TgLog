@@ -23,17 +23,31 @@ class Database():
         self.connection.commit()
 
     def add_table_user(self, user_call):
+        # lotwd_db = user_call + '_LoTW'
+
         try:
-            query = (f'CREATE TABLE IF NOT EXISTS {user_call}('
-                     'qso_date TEXT,'
-                     'time_on TEXT,'
-                     'band TEXT,'
-                     'mode TEXT,'
-                     'call TEXT,'
-                     'gridsquare TEXT,'
-                     'operator TEXT,'
-                     'PRIMARY KEY(qso_date, time_on, band, mode, call));')
-            self.cursor.execute(query)
+            query = (f'''
+                     CREATE TABLE IF NOT EXISTS {user_call}(
+                     qso_date TEXT,
+                     time_on TEXT,
+                     band TEXT,
+                     mode TEXT,
+                     call TEXT,
+                     gridsquare TEXT,
+                     operator TEXT,
+                     PRIMARY KEY(qso_date, time_on, band, mode, call));
+
+                     CREATE TABLE IF NOT EXISTS {user_call+'_lotw'}(
+                     qso_date TEXT,
+                     time_on TEXT,
+                     band TEXT,
+                     mode TEXT,
+                     call TEXT,
+                     gridsquare TEXT,
+                     operator TEXT,
+                     PRIMARY KEY(qso_date, time_on, band, mode, call));''')
+
+            self.cursor.executescript(query)
             self.connection.commit()
         except sqlite3.Error as Error:
             print('Ошибка при создании таблицы пользователя: ', Error)
@@ -45,6 +59,10 @@ class Database():
     def add_user_qso_data(self, user_call, data):
         self.cursor.executemany(f'INSERT OR IGNORE INTO {user_call} (call, qso_date, time_on, band, mode, gridsquare) VALUES (?, ?, ?, ?, ?, ?)', data)
         self.connection.commit()
+
+    def search_qso_data(self, user_call, data):
+        qsos = self.cursor.execute(f'SELECT call, gridsquare, qso_date, time_on, band, mode FROM {user_call} WHERE call LIKE ? OR gridsquare LIKE ?', ('%' + data + '%', '%' + data + '%'))
+        return qsos.fetchall()
 
 
     def __del__(self):

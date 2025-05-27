@@ -17,7 +17,23 @@ import re
 async def CallBaksMenu(callback: CallbackQuery, state: FSMContext, bot: Bot):
     db = Database(os.getenv('DATABASE_NAME'))
     user = db.select_user_id(callback.from_user.id)
+
     if (user):
+        if (callback.data == 'update_lotw'):
+            await bot.send_message(callback.from_user.id, f'⚠️ Синхронизация с LoTW в стадии тестирования')
+        if (callback.data == 'download_log'):
+            await bot.send_message(callback.from_user.id, f'⚠️ Скачать весь лог в стадии тестирования')
+        if (callback.data == 'full_search'):
+            await bot.send_message(callback.from_user.id, f'⚠️ Полный поиск по логу в стадии тестирования')
+        if (callback.data == 'qo100_log'):
+            await bot.send_message(callback.from_user.id, f'⚠️ Конвертер в стадии тестирования')
+        if (callback.data == 'my_diploma'):
+            await bot.send_message(callback.from_user.id, f'⚠️ Выдача дипломов в стадии тестирования')
+        if (callback.data == 'statistics'):
+            await bot.send_message(callback.from_user.id, f'⚠️ Статистика в стадии тестирования')
+        if (callback.data == 'help'):
+            await bot.send_message(callback.from_user.id, f'⚠️ Помощь в стадии тестирования')
+
         if (callback.data == 'upload_log'):
             await callback.message.delete()
             await callback.message.answer(f'<b>Выбрано</b>: Загрузить лог')
@@ -52,18 +68,19 @@ async def upload_adif(message: types.Message, state: FSMContext, bot: Bot):
         if (file_size > 10 * 1024 * 1024):
             await bot.send_message(message.from_user.id, '⛔️ Размер файла очень большой.\n\n')
             await state.clear()
-            await bot.send_message(message.from_user.id, 'Для продолжения выбирте действие', reply_markup=interlinemenu())
+            await bot.send_message(message.from_user.id, 'Для продолжения выберите действие', reply_markup=interlinemenu())
             return
         # await bot.send_message(message.from_user.id, f'✅ Файл размером <b>{round(file_size/1024, 2)}</b>Кб загружен. QRX...')
         # await bot.send_message(message.from_user.id, '✅ Началась обработка. QRX...')
         await adif(users[1], download_path, message, bot, state)
         # await bot.send_message(message.from_user.id, '✅ Вышел из режима загрузки лога. \n\n')
         await state.clear()
-        await bot.send_message(message.from_user.id, 'Для продолжения выбирте действие', reply_markup=interlinemenu())
+        await bot.send_message(message.from_user.id, 'Для продолжения выберите действие', reply_markup=interlinemenu())
+        await bot.send_message(message.from_user.id, '💡 <i>Если сейчас в сообщении ввести часть позывного или локатора, то произойдет поиск по вашему логу.</i>')
     else:
         await message.reply("⛔️ Загрузка лога отменена.")
         await state.clear()
-        await bot.send_message(message.from_user.id, 'Для продолжения выбирте действие', reply_markup=interlinemenu())
+        await bot.send_message(message.from_user.id, 'Для продолжения выберите действие', reply_markup=interlinemenu())
 
 
 

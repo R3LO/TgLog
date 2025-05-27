@@ -8,6 +8,7 @@ import os
 # from utils.commands import set_commands
 from handlers.start import get_start
 from handlers.register import start_register, register_call, register_name
+from handlers.my_profile import my_profile
 from handlers.CallBacksMenu import upload_adif
 from handlers.main_menu import main_menu
 from handlers.send_echo import send_echo
@@ -34,6 +35,7 @@ dp.message.register(get_start, Command(commands='start'))
 
 # Регистируем хендлеры регистрации
 dp.message.register(start_register, F.text=='✅ РЕГИСТРАЦИЯ')
+dp.message.register(my_profile, F.text=='💼 Мой профиль')
 dp.message.register(main_menu, F.text=='☰ Меню')
 dp.message.register(register_call, RegisterState.regCall)
 dp.message.register(register_name, RegisterState.regName)

@@ -10,6 +10,7 @@ def interlinemenu():
     kb.button(text='❌🛠 Конвертировать ADIF в QO-100', callback_data='qo100_log')
     kb.button(text='❌🏆 Мои дипломы', callback_data='my_diploma')
     kb.button(text='❌📊 Статистика', callback_data='statistics')
+    kb.button(text='❌❌ Очистить лог', callback_data='drop_log')
     kb.button(text='❌🆘 Помощь', callback_data='help')
 
 

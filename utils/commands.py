@@ -8,8 +8,8 @@ async def set_commands(bot: Bot):
           description='Запустить бот'
         ),
         BotCommand(
-          command='help'  ,
-          description='Помощь в работе с ботом'
+          command='menu'  ,
+          description='Показать кнопку Меню и Профиль'
         )
     ]
     await bot.set_my_commands(commands, BotCommandScopeDefault())

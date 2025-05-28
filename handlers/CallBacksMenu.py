@@ -44,8 +44,10 @@ async def CallBaksMenu(callback: CallbackQuery, state: FSMContext, bot: Bot):
             await bot.send_message(callback.from_user.id, f'⚠️ Конвертер в стадии тестирования')
         if (callback.data == 'my_diploma'):
             await bot.send_message(callback.from_user.id, f'⚠️ Выдача дипломов в стадии тестирования')
+
         if (callback.data == 'statistics'):
             await bot.send_message(callback.from_user.id, f'⚠️ Статистика в стадии тестирования')
+
         if (callback.data == 'help'):
             await bot.send_message(callback.from_user.id, f'⚠️ Помощь в стадии тестирования')
 
@@ -78,11 +80,11 @@ async def upload_adif_lotw(message: types.Message, state: FSMContext, bot: Bot):
     db = Database(os.getenv('DATABASE_NAME'))
     users = db.select_user_id(message.from_user.id)
     if message.document:
-        file = 'logs\\' + users[1] + '_' + str(message.from_user.id) +'_lotw.txt'
+        file = 'logs/' + users[1] + '_' + str(message.from_user.id) +'_lotw.txt'
         download_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), file)
         await message.bot.download(message.document, destination=download_path)
         file_size = os.path.getsize(download_path)
-        if (file_size > 10 * 1024 * 1024):
+        if (file_size > 12 * 1024 * 1024):
             await bot.send_message(message.from_user.id, '⛔️ Размер файла очень большой.\n\n')
             await state.clear()
             await bot.send_message(message.from_user.id, 'Для продолжения выберите действие', reply_markup=interlinemenu())
@@ -100,7 +102,7 @@ async def upload_adif(message: types.Message, state: FSMContext, bot: Bot):
     db = Database(os.getenv('DATABASE_NAME'))
     users = db.select_user_id(message.from_user.id)
     if message.document:
-        file = 'logs\\' + users[1] + '_' + str(message.from_user.id) +'.txt'
+        file = 'logs/' + users[1] + '_' + str(message.from_user.id) +'.txt'
         download_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), file)
         await message.bot.download(message.document, destination=download_path)
         file_size = os.path.getsize(download_path)
@@ -178,7 +180,7 @@ async def adif(table_db: str, log: str, message: Message, bot: Bot, state):
     db = Database(os.getenv('DATABASE_NAME'))
     user = db.select_user_id(message.from_user.id)
     error = False
-    file = 'logs\\' + user[1] + '_bad_log.txt'
+    file = 'logs/' + user[1] + '_bad_log.txt'
     upload_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), file)
     with open(upload_path, 'w'):   pass
     logbook = []

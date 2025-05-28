@@ -126,11 +126,15 @@ async def lotw(table_db: str, log: str, message: Message, bot: Bot, state):
     db = Database(os.getenv('DATABASE_NAME'))
     user = db.select_user_id(message.from_user.id)
     logbook = []
-    try:
-        raw = re.split('<EOR>|<EOH>', open(log).read().upper(), flags=re.IGNORECASE)
-    except:
-        await bot.send_message(message.from_user.id, '❌ Это не файл из LoTW')
-        return
+    # try:
+    #     with open(log, 'r') as f:
+    #         raw = f.read()
+    #         # print(raw)
+    #         raw = re.split('<eor>|<eoh>')
+    raw = re.split('<EOR>|<EOH>', open(log, encoding="utf8", errors='ignore').read().upper(), flags=re.IGNORECASE)
+    # except:
+    #     await bot.send_message(message.from_user.id, '❌ Это не файл из LoTW')
+    #     return
     n = 0
     if (raw[0].split('\n')[0] == 'ARRL LOGBOOK OF THE WORLD STATUS REPORT'):
         try:
@@ -179,7 +183,7 @@ async def adif(table_db: str, log: str, message: Message, bot: Bot, state):
     with open(upload_path, 'w'):   pass
     logbook = []
     try:
-        raw = re.split('<EOR>|<EOH>', open(log).read().upper(), flags=re.IGNORECASE)
+        raw = re.split('<EOR>|<EOH>', open(log, encoding="utf8", errors='ignore').read().upper(), flags=re.IGNORECASE)
     except:
         await bot.send_message(message.from_user.id, '❌ Это не файл ADIF лога')
         return

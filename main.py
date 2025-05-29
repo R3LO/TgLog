@@ -6,7 +6,7 @@ import asyncio
 from dotenv import load_dotenv
 import os
 from utils.commands import set_commands
-from handlers.start import get_start, get_menu
+from handlers.start import get_start, get_menu, get_stat_states, get_stat_loc, get_stat_cqz, get_stat_ituz
 from handlers.register import start_register, register_call, register_name
 from handlers.my_profile import my_profile
 from handlers.CallBacksMenu import upload_adif, upload_adif_lotw
@@ -34,6 +34,10 @@ async def start_bot(bot):
 dp.startup.register(start_bot)
 dp.message.register(get_start, Command(commands='start'))
 dp.message.register(get_menu, Command(commands='menu'))
+dp.message.register(get_stat_states, Command(commands='stat_states'))
+dp.message.register(get_stat_loc, Command(commands='stat_loc'))
+dp.message.register(get_stat_cqz, Command(commands='stat_cqz'))
+dp.message.register(get_stat_ituz, Command(commands='stat_ituz'))
 
 # Регистируем хендлеры регистрации
 dp.message.register(start_register, F.text=='✅ РЕГИСТРАЦИЯ')

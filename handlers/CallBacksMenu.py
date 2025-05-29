@@ -46,7 +46,36 @@ async def CallBaksMenu(callback: CallbackQuery, state: FSMContext, bot: Bot):
             await bot.send_message(callback.from_user.id, f'⚠️ Выдача дипломов в стадии тестирования')
 
         if (callback.data == 'statistics'):
-            await bot.send_message(callback.from_user.id, f'⚠️ Статистика в стадии тестирования')
+            db = Database(os.getenv('DATABASE_NAME'))
+            user = db.select_user_id(callback.from_user.id)[1]
+            total_qsos = db.get_total_qso(user)
+            total_by_band = db.get_stat_bands(user)
+            band_msg = '👀 <b>По диапазонам в основном логе:</b>\n'
+            for i  in range(len(total_by_band)):
+                band_msg += f'▫️ {total_by_band[i][0]} ▫️ {total_by_band[i][1]} ▫️ {total_by_band[i][2]} QSO\n'
+            qsos = total_qsos[0][0]
+            lotws =total_qsos[1][0]
+            dxcc =  db.get_stat_states(user)
+            qra =  db.get_stat_loc(user)
+            cqz =  db.get_stat_cqz(user)
+            ituz =  db.get_stat_ituz(user)
+            # await callback.message.delete()
+            await bot.send_message(callback.from_user.id,
+                                   f'📊 Статистика по логу <b>{user}</b>\n\n'
+                                   f'▫️ Всего загружено в лог:  <b>{qsos}</b> QSO\n'
+                                   f'▫️ Загружено LoTW:  <b>{lotws}</b> CFM\n\n'
+                                   f'{band_msg}'
+                                   f'\n\n🏆 <b>ПО ДИПЛОМАМ НА 🛰 QO-100</b>\n'
+                                   f'▫️LoTW DXCC:  {len(dxcc)} \n'
+                                   f'▫️LoTW QRA локаторов:  {len(qra)} \n'
+                                   f'▫️LoTW CQ зон:  {len(cqz)} \n'
+                                   f'▫️LoTW ITU зон:  {len(ituz)} \n'
+                                   f'\n\n<i>Более подробно по данным ARRL LoTW</i>\n'
+                                   f'/stat_states - подтверденные страны DXCC из LoTW\n'
+                                   f'/stat_loc - подтверденные локаторы из LoTW\n'
+                                   f'/stat_cqz - подтверденные CQ зоны из LoTW\n'
+                                   f'/stat_ituz - подтверденные ITU зоны из LoTW\n'
+                                   )
 
         if (callback.data == 'help'):
             await bot.send_message(callback.from_user.id, f'⚠️ Помощь в стадии тестирования')

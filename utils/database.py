@@ -72,16 +72,6 @@ class Database():
 
     def search_qso_data(self, user_call, data):
         lotw = user_call + '_lotw'
-        # qsos = self.cursor.execute(f'SELECT call, gridsquare, qso_date, time_on, band, mode FROM {user_call} WHERE call LIKE ? OR gridsquare LIKE ?', ('%' + data + '%', '%' + data + '%'))
-        # query = f'''SELECT {user_call}.call, {user_call}.band, {user_call}.mode,
-        #     substr(IIF(t2.gridsquare not Null, t2.gridsquare, {user_call}.gridsquare), 1, 4) AS grid,
-        #     IIF(t2.qsl_rcvd = 'Y', 'Y', 'N') AS qsl, count(*)
-        #     FROM {user_call}
-        #     LEFT JOIN {lotw} AS t2 ON {user_call}.call = t2.call and {user_call}.band = t2.band and {user_call}.mode = t2.mode
-        #     WHERE {user_call}.call LIKE '%{data}%' OR grid LIKE '%{data}%'
-        #     GROUP BY {user_call}.call, {user_call}.band, {user_call}.mode, {user_call}.qso_date, grid,
-        #     ORDER BY {user_call}.call, grid DESC'''
-            # LIMIT 30;'''
         query = f'''SELECT {user_call}.call, {user_call}.band, {user_call}.mode,
             substr(IIF(t2.gridsquare not Null, t2.gridsquare, {user_call}.gridsquare), 1, 4) AS grid,
             IIF(t2.qsl_rcvd = 'Y', 'Y', 'N') AS qsl
@@ -92,6 +82,72 @@ class Database():
             ORDER BY {user_call}.call, grid DESC'''
         qsos = self.cursor.execute(query)
         return qsos.fetchall()
+
+    def get_total_qso(self, user_call):
+        lotw = user_call + '_lotw'
+        query_qsos = f'''
+                    Select count(*) from {user_call}
+                    UNION
+                    Select count(*) from {lotw};
+                    '''
+        qsos = self.cursor.execute(query_qsos)
+        return qsos.fetchall()
+
+    def get_stat_states(self, user_call):
+        lotw = user_call + '_lotw'
+        query_qsos = f'''
+                    SELECT country, call, count(*) as QSPs from {lotw}
+                    WHERE country IS NOT NULL and band = '13CM' and prop_mode = 'SAT' and sat_name = 'QO-100'
+                    GROUP BY country
+                    ORDER BY country ASC;
+                    '''
+        stat = self.cursor.execute(query_qsos)
+        return stat.fetchall()
+
+
+    def get_stat_loc(self, user_call):
+        lotw = user_call + '_lotw'
+        query_qsos = f'''
+                    SELECT substr(gridsquare, 1, 4) as loc, call from {lotw}
+                    WHERE loc IS NOT NULL and band = '13CM' and prop_mode = 'SAT' and sat_name = 'QO-100'
+                    GROUP BY loc
+                    ORDER BY loc ASC;
+                    '''
+        stat = self.cursor.execute(query_qsos)
+        return stat.fetchall()
+
+    def get_stat_cqz(self, user_call):
+        lotw = user_call + '_lotw'
+        query_qsos = f'''
+                    SELECT cqz, call from {lotw}
+                    WHERE cqz IS NOT NULL and band = '13CM' and prop_mode = 'SAT' and sat_name = 'QO-100'
+                    GROUP BY cqz
+                    ORDER BY cqz ASC;
+                    '''
+        stat = self.cursor.execute(query_qsos)
+        return stat.fetchall()
+
+    def get_stat_ituz(self, user_call):
+        lotw = user_call + '_lotw'
+        query_qsos = f'''
+                    SELECT ituz, call from {lotw}
+                    WHERE ituz IS NOT NULL and band = '13CM' and prop_mode = 'SAT' and sat_name = 'QO-100'
+                    GROUP BY ituz
+                    ORDER BY ituz ASC;
+                    '''
+        stat = self.cursor.execute(query_qsos)
+        return stat.fetchall()
+
+
+    def get_stat_bands(self, user_call):
+        query_qsos = f'''
+                    SELECT band, mode, count(*) as QSPs from {user_call}
+                    GROUP BY band, mode
+                    ORDER BY band, mode ASC;
+                    '''
+        stat = self.cursor.execute(query_qsos)
+        return stat.fetchall()
+
 
 
     def __del__(self):

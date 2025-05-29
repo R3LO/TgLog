@@ -93,6 +93,27 @@ class Database():
         qsos = self.cursor.execute(query_qsos)
         return qsos.fetchall()
 
+    def get_total_uniq_log(self, user_call):
+        query_qsos = f'''
+                    SELECT call, qso_date, substr(time_on, 1, 4), band, mode from {user_call}
+                    WHERE call IS NOT NULL and band = '13CM'
+                    GROUP by call
+                    ORDER BY call ASC;
+                    '''
+        qsos = self.cursor.execute(query_qsos)
+        return qsos.fetchall()
+
+    def get_total_uniq_lotw(self, user_call):
+        lotw = user_call + '_lotw'
+        query_qsos = f'''
+                    SELECT call, qso_date, substr(time_on, 1, 4), band, mode from {lotw}
+                    WHERE call IS NOT NULL and band = '13CM' and prop_mode = 'SAT' and sat_name = 'QO-100'
+                    GROUP by call
+                    ORDER BY call ASC;
+                    '''
+        qsos = self.cursor.execute(query_qsos)
+        return qsos.fetchall()
+
     def get_stat_states(self, user_call):
         lotw = user_call + '_lotw'
         query_qsos = f'''

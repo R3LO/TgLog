@@ -81,6 +81,43 @@ async def get_stat_ituz(message: Message, bot: Bot):
                            f'{msg}\n 👍 ВСЕГО ITU зон: <b>{i+1}</b>'
                            )
 
+async def get_uniq_log(message: Message, bot: Bot):
+    db = Database(os.getenv('DATABASE_NAME'))
+    user = db.select_user_id(message.from_user.id)[1]
+    uniq_log = db.get_total_uniq_log(user)
+    file = 'logs/' + user + '_uniq_log.txt'
+    upload_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), file)
+    txt = f'---=== {user}: Список уникальных позывныз из вашего лога ===---\n\n'
+    for i in range(len(uniq_log)):
+        txt += f'{i+1}:  {uniq_log[i][0]}  {uniq_log[i][1]}  {uniq_log[i][2]}   {uniq_log[i][3]}  {uniq_log[i][4]}\n'
+    with open(upload_path, 'w', encoding='utf-8') as f:
+        f.write(txt)
+    await bot.send_message(message.from_user.id, text=
+                        f'📌 <b>{user}</b> в логе <b>{len(uniq_log)}</b> позывных юникальные.\n\n'
+                        f'💾 Файл со списом уникальных позывных ниже 👇 \n\n'
+                        )
+    document = FSInputFile(upload_path)
+    await bot.send_document(message.from_user.id, document)
+
+
+async def get_uniq_lotw(message: Message, bot: Bot):
+    db = Database(os.getenv('DATABASE_NAME'))
+    user = db.select_user_id(message.from_user.id)[1]
+    uniq_lotw = db.get_total_uniq_lotw(user)
+    file = 'logs/' + user + '_uniq_lotw.txt'
+    upload_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), file)
+    txt = f'---=== {user}: Список уникальных позывныз из LoTW ===---\n\n'
+    for i in range(len(uniq_lotw)):
+        txt += f'{i+1}:  {uniq_lotw[i][0]}  {uniq_lotw[i][1]}  {uniq_lotw[i][2]}   {uniq_lotw[i][3]}  {uniq_lotw[i][4]}\n'
+    with open(upload_path, 'w', encoding='utf-8') as f:
+        f.write(txt)
+    await bot.send_message(message.from_user.id, text=
+                        f'📌 <b>{user}</b> в логе <b>{len(uniq_lotw)}</b> позывных из LoTW уникальные.\n\n'
+                        f'💾 Файл со списом уникальных позывных ниже 👇 \n\n'
+                        )
+    document = FSInputFile(upload_path)
+    await bot.send_document(message.from_user.id, document)
+
 
 async def get_stat_loc(message: Message, bot: Bot):
     db = Database(os.getenv('DATABASE_NAME'))

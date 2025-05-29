@@ -59,22 +59,29 @@ async def CallBaksMenu(callback: CallbackQuery, state: FSMContext, bot: Bot):
             qra =  db.get_stat_loc(user)
             cqz =  db.get_stat_cqz(user)
             ituz =  db.get_stat_ituz(user)
+            uniq_log = db.get_total_uniq_log(user)
+            uniq_lotw = db.get_total_uniq_lotw(user)
             # await callback.message.delete()
             await bot.send_message(callback.from_user.id,
                                    f'📊 Статистика по логу <b>{user}</b>\n\n'
-                                   f'▫️ Всего загружено в лог:  <b>{qsos}</b> QSO\n'
-                                   f'▫️ Загружено LoTW:  <b>{lotws}</b> CFM\n\n'
+                                   f'✅ Всего загружено в лог:  <b>{qsos}</b> QSO\n'
+                                   f'✅ Загружено LoTW:  <b>{lotws}</b> CFM\n\n'
+                                   f'✅ Уникальных позывных на 🛰 QO-100:\n'
+                                   f'▫️ по логу:  <b>{len(uniq_log)}</b> \n'
+                                   f'▫️ по LoTW:  <b>{len(uniq_lotw)}</b> \n\n'
                                    f'{band_msg}'
                                    f'\n\n🏆 <b>ПО ДИПЛОМАМ НА 🛰 QO-100</b>\n'
                                    f'▫️LoTW DXCC:  {len(dxcc)} \n'
                                    f'▫️LoTW QRA локаторов:  {len(qra)} \n'
                                    f'▫️LoTW CQ зон:  {len(cqz)} \n'
                                    f'▫️LoTW ITU зон:  {len(ituz)} \n'
-                                   f'\n\n<i>Более подробно по данным ARRL LoTW</i>\n'
-                                   f'/stat_states - подтверденные страны DXCC из LoTW\n'
-                                   f'/stat_loc - подтверденные локаторы из LoTW\n'
-                                   f'/stat_cqz - подтверденные CQ зоны из LoTW\n'
-                                   f'/stat_ituz - подтверденные ITU зоны из LoTW\n'
+                                   f'\n\n💡 <i>Для допонительной информации можно выполнить команды:</i>\n'
+                                   f'/stat_states - список подтверденных DXCC стран из LoTW\n'
+                                   f'/stat_loc - спиок подтверденных локаторов из LoTW\n'
+                                   f'/stat_cqz - спиок подтверденных CQ зон из LoTW\n'
+                                   f'/stat_ituz - список подтверденных ITU зон из LoTW\n'
+                                   f'/uniq_log - список уникальных позывных по логу\n'
+                                   f'/uniq_lotw - список уникальных позывных по LoTW\n'
                                    )
 
         if (callback.data == 'help'):

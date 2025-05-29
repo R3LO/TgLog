@@ -26,6 +26,14 @@ async def set_commands(bot: Bot):
         BotCommand(
           command='stat_ituz'  ,
           description='Показать подтвержденные ITU зоны'
+        ),
+        BotCommand(
+          command='uniq_log'  ,
+          description='Подучить выписку уникальных позывных по логу'
+        ),
+        BotCommand(
+          command='uniq_lotw'  ,
+          description='Подучить выписку уникальных позывных по LoTW'
         )
     ]
     await bot.set_my_commands(commands, BotCommandScopeDefault())

@@ -1,4 +1,6 @@
 from aiogram import Bot, types
+from aiogram.utils.keyboard import InlineKeyboardBuilder
+from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
 from aiogram.types import Message, CallbackQuery
 from aiogram.types import FSInputFile
 from aiogram import F
@@ -8,6 +10,7 @@ from state.uload_log import Upload_logState
 from state.upload_lotw import Upload_lotwState
 from keyboards.inline_menu_kb import interlinemenu
 from utils.database import Database
+from keyboards.inline_menu_kb import interlinemenu
 import os
 import re
 
@@ -35,54 +38,139 @@ async def CallBaksMenu(callback: CallbackQuery, state: FSMContext, bot: Bot):
             await state.clear()
             await state.set_state(Upload_lotwState.upload_adif_lotw.state)
 
+        if (callback.data == 'drop_log'):
+            kb = InlineKeyboardBuilder()
+            kb.button(text='Удалить логи', callback_data='del_yes'),
+            kb.button(text='Отмена', callback_data='del_no')
+            kb.adjust(2)
+            await callback.message.delete()
+            await bot.send_message(callback.from_user.id,
+                                   f'⚠️ <b>Вы дейсвтительно хотитте удалить логи?</b> \n\n'
+                                   f'1️⃣ После удалнеия логов будет сброшена статистика. \n'
+                                   f'2️⃣ Нельзя полчить дипломы \n'
+                                   f'3️⃣ В любое время можно загрузить логи по новой. \n', reply_markup=kb.as_markup())
+        if (callback.data == 'del_yes'):
+            await callback.message.delete()
+            db = Database(os.getenv('DATABASE_NAME'))
+            user = db.select_user_id(callback.from_user.id)[1]
+            db.delete_all_logs(user)
+            await bot.send_message(callback.from_user.id,
+                                   f'✅ <b>Ваши логи удалены!</b>\n\n'
+                                   f'<i>Логи всегда можно загрузить снова в любой момент.\n</i>', reply_markup=interlinemenu())
+
+        if (callback.data == 'del_no'):
+            await callback.message.delete()
+            await bot.send_message(callback.from_user.id,f'❌ <b>Удвление логов оменено!</b>\n\n Выберите действие', reply_markup=interlinemenu())
 
         if (callback.data == 'download_log'):
-            await bot.send_message(callback.from_user.id, f'⚠️ Скачать весь лог в стадии тестирования')
+            await callback.message.delete()
+            kb = InlineKeyboardBuilder()
+            kb.button(text='Формат CSV', callback_data='dwnl_log_csv'),
+            kb.button(text='Формат ADIF', callback_data='dwnl_log_adif')
+            kb.adjust(2)
+            await bot.send_message(callback.from_user.id,
+                                   f'❓ <b>В каком формате вы хотите скачть лог?</b> \n\n'
+                                   f'1️⃣ CSV можно открыть в Excel \n'
+                                   f'2️⃣ ADIF можно загрузить в другие логи \n', reply_markup=kb.as_markup())
+        if (callback.data == 'dwnl_log_csv'):
+            await callback.message.delete()
+            db = Database(os.getenv('DATABASE_NAME'))
+            user = db.select_user_id(callback.from_user.id)[1]
+            qsos = db.get_full_log(user)
+            file = 'logs/' + user + '_' +'.csv'
+            path = os.path.join(os.path.dirname(os.path.abspath(__file__)), file)
+            with open(path, 'w') as f:
+                for i in range(len(qsos)):
+                    L = f'{qsos[i][0]};{qsos[i][1]};{qsos[i][2]};{qsos[i][3]};{qsos[i][4]};{qsos[i][5]}\n'
+                    f.writelines(L)
+            await bot.send_message(callback.from_user.id, text=
+                        f'📌 <b>{user}</b> в логе <b>{len(qsos)}</b> QSO.\n\n'
+                        f'💾 Файл лога в формате CSV ниже 👇 \n\n'
+                        )
+            document = FSInputFile(path)
+            await bot.send_document(callback.from_user.id, document)
+        if (callback.data == 'dwnl_log_adif'):
+            await callback.message.delete()
+            db = Database(os.getenv('DATABASE_NAME'))
+            user = db.select_user_id(callback.from_user.id)[1]
+            qsos = db.get_full_log(user)
+            file = 'logs/' + user + '_' +'.adif'
+            path = os.path.join(os.path.dirname(os.path.abspath(__file__)), file)
+            with open(path, 'w') as f:
+                L = f'TLog ADIF export file for {user}\n<EOH>\n'
+                f.writelines(L)
+                for i in range(len(qsos)):
+                    L = ''
+                    L += f'<CALL:{len(qsos[i][4].strip())}>{qsos[i][4].strip()}'
+                    L += f'<QSO_DATE:{len(qsos[i][0])}>{qsos[i][0]}'
+                    L += f'<TIME_ON:{len(qsos[i][1])}>{qsos[i][1]}'
+                    L += f'<BAND:{len(qsos[i][2].strip())}>{qsos[i][2].strip()}'
+                    L += f'<MODE:{len(qsos[i][3].strip())}>{qsos[i][3].strip()}'
+                    if qsos[i][5] is not None:
+                        L += f'<GRIDSQUARE:{len(qsos[i][5].strip())}>{qsos[i][5].strip()}'
+                    L += f'<EOR>\n'
+                    f.writelines(L)
+            await bot.send_message(callback.from_user.id, text=
+                        f'📌 <b>{user}</b> в логе <b>{len(qsos)}</b> QSO.\n\n'
+                        f'💾 Файл лога в формате ADIF ниже 👇 \n\n'
+                        )
+            document = FSInputFile(path)
+            await bot.send_document(callback.from_user.id, document)
+
+
+
+
         if (callback.data == 'full_search'):
             await bot.send_message(callback.from_user.id, f'⚠️ Полный поиск по логу в стадии тестирования')
+
         if (callback.data == 'qo100_log'):
             await bot.send_message(callback.from_user.id, f'⚠️ Конвертер в стадии тестирования')
+
         if (callback.data == 'my_diploma'):
             await bot.send_message(callback.from_user.id, f'⚠️ Выдача дипломов в стадии тестирования')
 
         if (callback.data == 'statistics'):
             db = Database(os.getenv('DATABASE_NAME'))
             user = db.select_user_id(callback.from_user.id)[1]
-            total_qsos = db.get_total_qso(user)
-            total_by_band = db.get_stat_bands(user)
-            band_msg = '👀 <b>По диапазонам в основном логе:</b>\n'
-            for i  in range(len(total_by_band)):
-                band_msg += f'▫️ {total_by_band[i][0]} ▫️ {total_by_band[i][1]} ▫️ {total_by_band[i][2]} QSO\n'
-            qsos = total_qsos[0][0]
-            lotws =total_qsos[1][0]
-            dxcc =  db.get_stat_states(user)
-            qra =  db.get_stat_loc(user)
-            cqz =  db.get_stat_cqz(user)
-            ituz =  db.get_stat_ituz(user)
-            uniq_log = db.get_total_uniq_log(user)
-            uniq_lotw = db.get_total_uniq_lotw(user)
-            # await callback.message.delete()
-            await bot.send_message(callback.from_user.id,
-                                   f'📊 Статистика по логу <b>{user}</b>\n\n'
-                                   f'✅ Всего загружено в лог:  <b>{qsos}</b> QSO\n'
-                                   f'✅ Загружено LoTW:  <b>{lotws}</b> CFM\n\n'
-                                   f'✅ Уникальных позывных на 🛰 QO-100:\n'
-                                   f'▫️ по логу:  <b>{len(uniq_log)}</b> \n'
-                                   f'▫️ по LoTW:  <b>{len(uniq_lotw)}</b> \n\n'
-                                   f'{band_msg}'
-                                   f'\n\n🏆 <b>ПО ДИПЛОМАМ НА 🛰 QO-100</b>\n'
-                                   f'▫️LoTW DXCC:  {len(dxcc)} \n'
-                                   f'▫️LoTW QRA локаторов:  {len(qra)} \n'
-                                   f'▫️LoTW CQ зон:  {len(cqz)} \n'
-                                   f'▫️LoTW ITU зон:  {len(ituz)} \n'
-                                   f'\n\n💡 <i>Для допонительной информации можно выполнить команды:</i>\n'
-                                   f'/stat_states - список подтверденных DXCC стран из LoTW\n'
-                                   f'/stat_loc - спиок подтверденных локаторов из LoTW\n'
-                                   f'/stat_cqz - спиок подтверденных CQ зон из LoTW\n'
-                                   f'/stat_ituz - список подтверденных ITU зон из LoTW\n'
-                                   f'/uniq_log - список уникальных позывных по логу\n'
-                                   f'/uniq_lotw - список уникальных позывных по LoTW\n'
-                                   )
+            try:
+                total_qsos_log = db.get_total_qso_log(user)
+                total_qsos_lotw = db.get_total_qso_lotw(user)
+                total_by_band = db.get_stat_bands(user)
+                band_msg = '👀 <b>По диапазонам в основном логе:</b>\n'
+                for i  in range(len(total_by_band)):
+                    band_msg += f'▫️ {total_by_band[i][0]} ▫️ {total_by_band[i][1]} ▫️ {total_by_band[i][2]} QSO\n'
+                qsos = total_qsos_log[0][0]
+                lotws = total_qsos_lotw[0][0]
+                dxcc =  db.get_stat_states(user)
+                qra =  db.get_stat_loc(user)
+                cqz =  db.get_stat_cqz(user)
+                ituz =  db.get_stat_ituz(user)
+                uniq_log = db.get_total_uniq_log(user)
+                uniq_lotw = db.get_total_uniq_lotw(user)
+                # await callback.message.delete()
+                await bot.send_message(callback.from_user.id,
+                                    f'📊 Статистика по логу <b>{user}</b>\n\n'
+                                    f'✅ Всего загружено в лог:  <b>{qsos}</b> QSO\n'
+                                    f'✅ Загружено LoTW:  <b>{lotws}</b> CFM\n\n'
+                                    f'✅ Уникальных позывных на 🛰 QO-100:\n'
+                                    f'▫️ по логу:  <b>{len(uniq_log)}</b> \n'
+                                    f'▫️ по LoTW:  <b>{len(uniq_lotw)}</b> \n\n'
+                                    f'{band_msg}'
+                                    f'\n\n🏆 <b>ПО ДИПЛОМАМ НА 🛰 QO-100</b>\n'
+                                    f'▫️LoTW DXCC:  {len(dxcc)} \n'
+                                    f'▫️LoTW QRA локаторов:  {len(qra)} \n'
+                                    f'▫️LoTW CQ зон:  {len(cqz)} \n'
+                                    f'▫️LoTW ITU зон:  {len(ituz)} \n'
+                                    f'\n\n💡 <i>Для допонительной информации можно выполнить команды:</i>\n'
+                                    f'/stat_states - список подтверденных DXCC стран из LoTW\n'
+                                    f'/stat_loc - спиок подтверденных локаторов из LoTW\n'
+                                    f'/stat_cqz - спиок подтверденных CQ зон из LoTW\n'
+                                    f'/stat_ituz - список подтверденных ITU зон из LoTW\n'
+                                    f'/uniq_log - список уникальных позывных по логу\n'
+                                    f'/uniq_lotw - список уникальных позывных по LoTW\n'
+                                    )
+            except:
+                await bot.send_message(callback.from_user.id, f'⚠️ Логи либо не загружены, либо ошибка базы данных.')
 
         if (callback.data == 'help'):
             await bot.send_message(callback.from_user.id, f'⚠️ Помощь в стадии тестирования')

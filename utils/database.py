@@ -83,11 +83,23 @@ class Database():
         qsos = self.cursor.execute(query)
         return qsos.fetchall()
 
-    def get_total_qso(self, user_call):
+    def get_total_qso_log(self, user_call):
+        query_qsos = f'''
+                    Select count(*) from {user_call};
+                    '''
+        qsos = self.cursor.execute(query_qsos)
+        return qsos.fetchall()
+
+    def get_full_log(self, user_call):
+        query_qsos = f'''
+                    Select * from {user_call};
+                    '''
+        qsos = self.cursor.execute(query_qsos)
+        return qsos.fetchall()
+
+    def get_total_qso_lotw(self, user_call):
         lotw = user_call + '_lotw'
         query_qsos = f'''
-                    Select count(*) from {user_call}
-                    UNION
                     Select count(*) from {lotw};
                     '''
         qsos = self.cursor.execute(query_qsos)
@@ -168,6 +180,17 @@ class Database():
                     '''
         stat = self.cursor.execute(query_qsos)
         return stat.fetchall()
+
+    def delete_all_logs(self, user_call):
+        lotw = user_call + '_lotw'
+        query = f'''
+                    DELETE FROM {user_call};
+                    DELETE FROM {lotw};
+                '''
+
+        self.cursor.executescript(query)
+        self.connection.commit()
+
 
 
 

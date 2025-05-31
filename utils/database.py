@@ -72,14 +72,14 @@ class Database():
 
     def search_qso_data(self, user_call, data):
         lotw = user_call + '_lotw'
-        query = f'''SELECT {user_call}.call, {user_call}.band, {user_call}.mode,
+        query = f'''SELECT {user_call}.qso_date, {user_call}.call, {user_call}.band, {user_call}.mode,
             substr(IIF(t2.gridsquare not Null, t2.gridsquare, {user_call}.gridsquare), 1, 4) AS grid,
             IIF(t2.qsl_rcvd = 'Y', 'Y', 'N') AS qsl
             FROM {user_call}
-            LEFT JOIN {lotw} AS t2 ON {user_call}.call = t2.call and {user_call}.band = t2.band and {user_call}.mode = t2.mode
+            LEFT JOIN {lotw} AS t2 ON {user_call}.qso_date = t2.qso_date and {user_call}.call = t2.call and {user_call}.band = t2.band and {user_call}.mode = t2.mode
             WHERE {user_call}.call LIKE '%{data}%' OR grid LIKE '%{data}%'
-            GROUP BY {user_call}.call, {user_call}.band, {user_call}.mode, grid
-            ORDER BY {user_call}.call, grid DESC'''
+            GROUP BY {user_call}.qso_date, {user_call}.call, {user_call}.band, {user_call}.mode, grid, qsl
+            ORDER BY {user_call}.call, grid ASC'''
         qsos = self.cursor.execute(query)
         return qsos.fetchall()
 

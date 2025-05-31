@@ -62,11 +62,16 @@ async def CallBaksMenu(callback: CallbackQuery, state: FSMContext, bot: Bot):
             await callback.message.delete()
             await bot.send_message(callback.from_user.id,f'❌ <b>Удвление логов оменено!</b>\n\n Выберите действие', reply_markup=interlinemenu())
 
+        if (callback.data == 'dwnl_cancel'):
+            await callback.message.delete()
+            await bot.send_message(callback.from_user.id,f'❌ <b>Скачивание логов оменено!</b>\n\n Выберите действие', reply_markup=interlinemenu())
+
         if (callback.data == 'download_log'):
             await callback.message.delete()
             kb = InlineKeyboardBuilder()
             kb.button(text='Формат CSV', callback_data='dwnl_log_csv'),
             kb.button(text='Формат ADIF', callback_data='dwnl_log_adif')
+            kb.button(text='Отмена', callback_data='dwnl_cancel')
             kb.adjust(2)
             await bot.send_message(callback.from_user.id,
                                    f'❓ <b>В каком формате вы хотите скачть лог?</b> \n\n'
@@ -77,46 +82,59 @@ async def CallBaksMenu(callback: CallbackQuery, state: FSMContext, bot: Bot):
             db = Database(os.getenv('DATABASE_NAME'))
             user = db.select_user_id(callback.from_user.id)[1]
             qsos = db.get_full_log(user)
-            file = 'logs/' + user + '_' +'.csv'
-            path = os.path.join(os.path.dirname(os.path.abspath(__file__)), file)
-            with open(path, 'w') as f:
-                for i in range(len(qsos)):
-                    L = f'{qsos[i][0]};{qsos[i][1]};{qsos[i][2]};{qsos[i][3]};{qsos[i][4]};{qsos[i][5]}\n'
-                    f.writelines(L)
-            await bot.send_message(callback.from_user.id, text=
-                        f'📌 <b>{user}</b> в логе <b>{len(qsos)}</b> QSO.\n\n'
-                        f'💾 Файл лога в формате CSV ниже 👇 \n\n'
-                        )
-            document = FSInputFile(path)
-            await bot.send_document(callback.from_user.id, document)
+            if len(qsos) != 0:
+                file = 'logs/' + user + '_' +'.csv'
+                path = os.path.join(os.path.dirname(os.path.abspath(__file__)), file)
+                with open(path, 'w') as f:
+                    for i in range(len(qsos)):
+                        L = ''
+                        # L = f'{qsos[i][0]};{qsos[i][1]};{qsos[i][2]};{qsos[i][3]};{qsos[i][4]};{qsos[i][5]}\n'
+                        L += str(qsos[i][0]) + ';'
+                        L += str(qsos[i][1][0:4])  + ';'
+                        L += str(qsos[i][2]) + ';'
+                        L += str(qsos[i][3]) + ';'
+                        L += str(qsos[i][4]) + ';'
+                        L += str(qsos[i][5]) + ';'
+                        L += '\n'
+                        f.writelines(L)
+                await bot.send_message(callback.from_user.id, text=
+                            f'📌 <b>{user}</b> в логе <b>{len(qsos)}</b> QSO.\n\n'
+                            f'💾 Файл лога в формате CSV ниже 👇 \n\n'
+                            )
+                document = FSInputFile(path)
+                await bot.send_document(callback.from_user.id, document)
+            else:
+                await bot.send_message(callback.from_user.id, text='❌ Чтобы что-то скачать, нужно что-то загрузить!')
         if (callback.data == 'dwnl_log_adif'):
             await callback.message.delete()
             db = Database(os.getenv('DATABASE_NAME'))
             user = db.select_user_id(callback.from_user.id)[1]
             qsos = db.get_full_log(user)
-            file = 'logs/' + user + '_' +'.adif'
-            path = os.path.join(os.path.dirname(os.path.abspath(__file__)), file)
-            with open(path, 'w') as f:
-                L = f'TLog ADIF export file for {user}\n<EOH>\n'
-                f.writelines(L)
-                for i in range(len(qsos)):
-                    L = ''
-                    L += f'<CALL:{len(qsos[i][4].strip())}>{qsos[i][4].strip()}'
-                    L += f'<QSO_DATE:{len(qsos[i][0])}>{qsos[i][0]}'
-                    L += f'<TIME_ON:{len(qsos[i][1])}>{qsos[i][1]}'
-                    L += f'<BAND:{len(qsos[i][2].strip())}>{qsos[i][2].strip()}'
-                    L += f'<MODE:{len(qsos[i][3].strip())}>{qsos[i][3].strip()}'
-                    if qsos[i][5] is not None:
-                        L += f'<GRIDSQUARE:{len(qsos[i][5].strip())}>{qsos[i][5].strip()}'
-                    L += f'<EOR>\n'
+            if len(qsos) != 0:
+                file = 'logs/' + user + '_' +'.adif'
+                path = os.path.join(os.path.dirname(os.path.abspath(__file__)), file)
+                with open(path, 'w') as f:
+                    L = f'TLog ADIF export file for {user}\n<EOH>\n'
                     f.writelines(L)
-            await bot.send_message(callback.from_user.id, text=
-                        f'📌 <b>{user}</b> в логе <b>{len(qsos)}</b> QSO.\n\n'
-                        f'💾 Файл лога в формате ADIF ниже 👇 \n\n'
-                        )
-            document = FSInputFile(path)
-            await bot.send_document(callback.from_user.id, document)
-
+                    for i in range(len(qsos)):
+                        L = ''
+                        L += f'<CALL:{len(qsos[i][4].strip())}>{qsos[i][4].strip()}'
+                        L += f'<QSO_DATE:{len(qsos[i][0])}>{qsos[i][0]}'
+                        L += f'<TIME_ON:{len(qsos[i][1])}>{qsos[i][1]}'
+                        L += f'<BAND:{len(qsos[i][2].strip())}>{qsos[i][2].strip()}'
+                        L += f'<MODE:{len(qsos[i][3].strip())}>{qsos[i][3].strip()}'
+                        if qsos[i][5] is not None:
+                            L += f'<GRIDSQUARE:{len(qsos[i][5].strip())}>{qsos[i][5].strip()}'
+                        L += f'<EOR>\n'
+                        f.writelines(L)
+                await bot.send_message(callback.from_user.id, text=
+                            f'📌 <b>{user}</b> в логе <b>{len(qsos)}</b> QSO.\n\n'
+                            f'💾 Файл лога в формате ADIF ниже 👇 \n\n'
+                            )
+                document = FSInputFile(path)
+                await bot.send_document(callback.from_user.id, document)
+            else:
+                await bot.send_message(callback.from_user.id, text='❌ Чтобы что-то скачать, нужно что-то загрузить!')
 
 
 

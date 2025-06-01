@@ -63,11 +63,11 @@ class Database():
         return users.fetchone()
 
     def add_user_qso_data(self, user_call, data):
-        self.cursor.executemany(f'INSERT OR IGNORE INTO {user_call} (call, qso_date, time_on, band, mode, gridsquare) VALUES (?, ?, ?, ?, ?, ?)', data)
+        self.cursor.executemany(f'INSERT OR REPLACE INTO {user_call} (call, qso_date, time_on, band, mode, gridsquare) VALUES (?, ?, ?, ?, ?, ?)', data)
         self.connection.commit()
 
     def add_user_lotw_data(self, user_call, data):
-        self.cursor.executemany(f'INSERT OR IGNORE INTO {user_call} (call, band, mode, qso_date, time_on, prop_mode, sat_name, qsl_rcvd, dxcc, country, gridsquare, cqz, ituz) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)', data)
+        self.cursor.executemany(f'INSERT OR REPLACE INTO {user_call} (call, band, mode, qso_date, time_on, prop_mode, sat_name, qsl_rcvd, dxcc, country, gridsquare, cqz, ituz) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)', data)
         self.connection.commit()
 
     def search_qso_data(self, user_call, data):
@@ -79,7 +79,8 @@ class Database():
             LEFT JOIN {lotw} AS t2 ON {user_call}.qso_date = t2.qso_date and {user_call}.call = t2.call and {user_call}.band = t2.band and {user_call}.mode = t2.mode
             WHERE {user_call}.call LIKE '%{data}%' OR grid LIKE '%{data}%'
             GROUP BY {user_call}.qso_date, {user_call}.call, {user_call}.band, {user_call}.mode, grid, qsl
-            ORDER BY {user_call}.call, grid ASC'''
+            ORDER BY {user_call}.qso_date DESC
+            LIMIT 80'''
         qsos = self.cursor.execute(query)
         return qsos.fetchall()
 

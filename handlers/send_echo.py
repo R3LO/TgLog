@@ -46,7 +46,7 @@ async def res_db(user: str, message: Message, m: str, bot: Bot):
             msg += f'➡️ <b>{call}</b> ◽️ {date} ◽️ {band} ◽️ {mode} ◽️ <b>{loc}</b> <b>{qsl}</b> \n'
             results += 1
 
-        await bot.send_message(message.from_user.id, f'{user.upper()}: Поиск по запросу <b>{m.upper()}</b> 🔎 <b>{results}</b> QSO')
+        await bot.send_message(message.from_user.id, f'{user.upper()}: Поиск по запросу <b>{m.upper()}</b> 🔎 <b>{results}</b> QSO\n<i>Лимит не более 80 строк.</i>')
         await bot.send_message(message.from_user.id, msg)
     else:
         await bot.send_message(message.from_user.id, f'{user.upper()}: Поиск по логу <b>{m}</b> 🔎 ничего не найдено \nВсе что вводится в строке сообщение ищется в вашем загруженном логе по полю позывной и локатор. \nВозможно вы не загрузили лог или в вашем логе нет такого позывного или локатора. \nИли для запуска бота нужно выпонить команду /start \n')

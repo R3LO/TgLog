@@ -9,7 +9,7 @@ async def set_commands(bot: Bot):
         ),
         BotCommand(
           command='menu',
-          description='Показать меню'
+          description='Главное меню'
         )
         # BotCommand(
         #   command='stat_states',

@@ -13,6 +13,6 @@ async def main_menu(message: Message, state: FSMContext, bot: Bot):
     db = Database(os.getenv('DATABASE_NAME'))
     users = db.select_user_id(message.from_user.id)
     if (users):
-        await bot.send_message(message.from_user.id, f'➡️ Выберите действеие',reply_markup=interlinemenu())
+        await bot.send_message(message.from_user.id, f'<b>☰ ГЛАВНОЕ МЕНЮ</b>',reply_markup=interlinemenu())
     else:
         await bot.send_message(message.from_user.id, f'⚠️ Вам необходимо зарегистрироваться! Введите /start')

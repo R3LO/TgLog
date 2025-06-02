@@ -38,6 +38,7 @@ async def register_name(message: Message, state: FSMContext, bot: Bot):
     await bot.send_message(message.from_user.id, msg)
     db = Database(os.getenv('DATABASE_NAME'))
     db.add_user(reg_call, reg_name, message.from_user.id)
+    db.add_table_user(reg_call)
     await bot.send_message(message.from_user.id, '<b>Регистрация завершена успешно!</b> 👍 \n\n<i>Для продолжения работы выберите действие из главного меню</i>', reply_markup=main_kb)
     # await asyncio.sleep(2)
     # await bot.send_message(message.from_user.id, '\n\n<b>☰ Главное меню</b>', reply_markup=main_menu())

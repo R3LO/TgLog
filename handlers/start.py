@@ -33,7 +33,10 @@ async def get_menu(message: Message, bot: Bot):
     db = Database(os.getenv('DATABASE_NAME'))
     users = db.select_user_id(message.from_user.id)
     if (users):
-        await bot.send_message(message.from_user.id, f'Для продолжения выберие действие по кнопкам ниже 👇\n\n', reply_markup=interlinemenu())
+        await bot.send_message(message.from_user.id,
+                               f'Для поиска по логу введите в сообщение позывной или локатор. Или выберите действие из главного меню.\n\n'
+                               f'<b>☰ ГЛАВНОЕ МЕНЮ</b> 👇 \n\n',
+                               reply_markup=interlinemenu())
     else:
         await bot.send_message(message.from_user.id, f'Здравствуйте! \n\n'
                             f'Данный бот является частью группы 📡 <b>QO-100-RUSSIA</b> \n'

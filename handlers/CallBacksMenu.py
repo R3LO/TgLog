@@ -8,6 +8,7 @@ from aiogram.types import CallbackQuery
 from aiogram.fsm.context import FSMContext
 from state.uload_log import Upload_logState
 from state.upload_lotw import Upload_lotwState
+from state.conv_adif import Conv_AdifState
 from keyboards.inline_menu_kb import interlinemenu
 from utils.database import Database
 from keyboards.inline_menu_kb import interlinemenu
@@ -23,25 +24,76 @@ async def CallBaksMenu(callback: CallbackQuery, state: FSMContext, bot: Bot):
     user = db.select_user_id(callback.from_user.id)
 
     if (user):
+        if (callback.data == 'conv_log'):
+            '''
+            Кнопка конвертировать лог
+
+            '''
+            await callback.message.delete()
+            await callback.message.answer(f'<b>Выбрано</b>: Конвертер QO-100')
+            await callback.message.answer(
+                                            f'⭐️ Загруженный файл при кнвертации не загружается в основную базу. Вы получите сконвертированный файл в ADIF формате. '
+                                            f'После конвертации все теги BAND переписываются на <b>13CM</b>, добавляются дополнительные теги <b>PROP_MODE со значением SAT</b> и <b>SAT_NAME со значением QO-100</b>.\n\n'
+                                            f'⭐️ <i>ADIF файл должен содердать минимум необходимых тегов:</i> \n\n'
+                                            f'▫️QSO_DATE - дата QSO\n'
+                                            f'▫️TIME_ON - время начало QSO\n'
+                                            f'▫️CALL - позывной корреспондента\n'
+                                            f'▫️MODE - вид связи\n'
+                                            f'▫️SUBMODE - подвид связи, необязательное поле для цифровых видов \n'
+                                            f'▫️GRIDSQUARE - локатор корреспондента (не обязательное поле)\n\n'
+                                            f'💾 <b>Чтобы приступить к конфертации файла нажмите на 📎 или перетащите ADIF файл в это сообщенине.</b> \n\n'
+                                            f'⚠️ <i>Для отмены загрузки отправьте текстовое сообшние <b>Отмена</b></i>')
+            await state.clear()
+            await state.set_state(Conv_AdifState.conv_adif)
+
+
+
+        if (callback.data == 'main_menu_upload'):
+            '''
+            Кнопка загрузить
+
+            '''
+            await callback.message.delete()
+            kb = InlineKeyboardBuilder()
+            kb.button(text='✓ Загрузить основной лог', callback_data='upload_log'),
+            kb.button(text='✓ Синхронизировать лог с LoTW', callback_data='upload_lotw')
+            kb.button(text='✗ Отмена', callback_data='clbk_cancel')
+            kb.adjust(1)
+            await bot.send_message(callback.from_user.id,
+                                   f'⭐️ Размер загружаемых файлов не более <b>10Мб</b> за раз. \n'
+                                   f'⭐️ Формат загружаемых файлов <b>ADIF</b>. \n'
+                                   f'⭐️ Повторные записи в лог не попадают. \n'
+                                   f'⭐️ Загружаются связи только за <b>QO-100</b> диапаpон <b>13CM</b>. \n', reply_markup=kb.as_markup())
+
+
         if (callback.data == 'upload_lotw'):
+            '''
+            Кнопка Синхронизация с LoTW
+            '''
             await callback.message.delete()
             await callback.message.answer(f'<b>Выбрано</b>: Снхронизация лога с файлом из LoTW')
             await bot.send_message(callback.from_user.id,
-                                   f'💡 <b>Для предотвращения \"утечек\" логина и пароля мы не запрашиваем данные сервиса LoTW, как это делают другие сервисы. Необходимый файл <b>lotwreport.adi</b> необходимо самостоятельно скачать из своей личной учетной записи LoTW.</b> Скачанный <b>lotwreport.adi</b> файл должен быть не более <b>10Мб</b>. \n\n'                                   f'1️⃣ Войдите в свою учетную запись LoTW \n'
+                                   f'⭐️ Для предотвращения \"утечек\" логина и пароля мы не запрашиваем данные сервиса LoTW, как это делают другие сервисы. Необходимый файл <b>lotwreport.adi</b> необходимо самостоятельно скачать из своей личной учетной записи LoTW. Скачанный <b>lotwreport.adi</b> файл должен быть не более <b>10Мб</b>. \n\n'
+                                   f'1️⃣ Войдите в свою учетную запись LoTW \n'
                                    f'2️⃣ Перейдите в <b>Your QSOs</b> \n'
                                    f'3️⃣ Перейдите в <b>Download Report</b> \n'
                                    f'4️⃣ Поставьте галочки <b>Include QSL details</b> и вторая галочка на <b>Include QSO station details (\"my\" station location fields)</b> \n'
-                                   f'5️⃣ Выбирите свой позывной \n'
+                                   f'5️⃣ Ниже выбирите позывной \n'
                                    f'6️⃣ Нажмите <b>Download Report</b> и сохрание файл себе на диск \n'
                                    f'7️⃣ Загрузите скачанный файл сообщением нажав на 📎 \n\n'
-                                   f'<i>Для отмены загрузки отправьте текстовым сообшнием слово <b>отмена</b></i>')
+                                   f'<i>Для отмены загрузки отправьте текстовым сообшнием слово <b>Отмена</b></i>')
             await state.clear()
             await state.set_state(Upload_lotwState.upload_adif_lotw.state)
 
+
         if (callback.data == 'drop_log'):
+            '''
+            Кнопка Удалить логи
+
+            '''
             kb = InlineKeyboardBuilder()
             kb.button(text='Удалить логи', callback_data='del_yes'),
-            kb.button(text='Отмена', callback_data='del_no')
+            kb.button(text='Отмена', callback_data='clbk_cancel')
             kb.adjust(2)
             await callback.message.delete()
             await bot.send_message(callback.from_user.id,
@@ -58,80 +110,93 @@ async def CallBaksMenu(callback: CallbackQuery, state: FSMContext, bot: Bot):
                                    f'✅ <b>Ваши логи удалены!</b>\n\n'
                                    f'<i>Логи всегда можно загрузить снова в любой момент.\n</i>', reply_markup=interlinemenu())
 
-        if (callback.data == 'del_no'):
+        if (callback.data == 'clbk_cancel'):
             await callback.message.delete()
-            await bot.send_message(callback.from_user.id,f'❌ <b>Удвление логов оменено!</b>\n\n Выберите действие', reply_markup=interlinemenu())
-
-        if (callback.data == 'dwnl_cancel'):
-            await callback.message.delete()
-            await bot.send_message(callback.from_user.id,f'❌ <b>Скачивание логов оменено!</b>\n\n Выберите действие', reply_markup=interlinemenu())
+            await bot.send_message(callback.from_user.id,f'❌ <b>Действие отменено!</b>\n\n <b>☰ ГЛАВНОЕ МЕНЮ</b>', reply_markup=interlinemenu())
 
         if (callback.data == 'download_log'):
+            '''
+            Кнопка Скачать
+            '''
             await callback.message.delete()
             kb = InlineKeyboardBuilder()
             kb.button(text='Формат CSV', callback_data='dwnl_log_csv'),
             kb.button(text='Формат ADIF', callback_data='dwnl_log_adif')
-            kb.button(text='Отмена', callback_data='dwnl_cancel')
+            kb.button(text='Отмена', callback_data='clbk_cancel')
             kb.adjust(2)
             await bot.send_message(callback.from_user.id,
                                    f'❓ <b>В каком формате вы хотите скачть лог?</b> \n\n'
                                    f'1️⃣ CSV можно открыть в Excel \n'
                                    f'2️⃣ ADIF можно загрузить в другие логи \n', reply_markup=kb.as_markup())
         if (callback.data == 'dwnl_log_csv'):
+            '''
+            Скачать лог в CSV формате
+
+            '''
             await callback.message.delete()
             db = Database(os.getenv('DATABASE_NAME'))
             user = db.select_user_id(callback.from_user.id)[1]
             qsos = db.get_full_log(user)
             if len(qsos) != 0:
                 file = 'logs/' + user + '_' +'.csv'
-                path = os.path.join(os.path.dirname(os.path.abspath(__file__)), file)
-                with open(path, 'w') as f:
+                file_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), file)
+                with open(file_path, 'w') as f:
                     for i in range(len(qsos)):
                         L = ''
                         # L = f'{qsos[i][0]};{qsos[i][1]};{qsos[i][2]};{qsos[i][3]};{qsos[i][4]};{qsos[i][5]}\n'
                         L += str(qsos[i][0]) + ';'
-                        L += str(qsos[i][1][0:4])  + ';'
+                        L += str(qsos[i][1])  + ';'
                         L += str(qsos[i][2]) + ';'
                         L += str(qsos[i][3]) + ';'
                         L += str(qsos[i][4]) + ';'
                         L += str(qsos[i][5]) + ';'
+                        L += str(qsos[i][6]) + ';'
                         L += '\n'
                         f.writelines(L)
                 await bot.send_message(callback.from_user.id, text=
                             f'📌 <b>{user}</b> в логе <b>{len(qsos)}</b> QSO.\n\n'
                             f'💾 Файл лога в формате CSV ниже 👇 \n\n'
                             )
-                document = FSInputFile(path)
+                document = FSInputFile(file_path)
                 await bot.send_document(callback.from_user.id, document)
             else:
                 await bot.send_message(callback.from_user.id, text='❌ Чтобы что-то скачать, нужно что-то загрузить!')
+
+
         if (callback.data == 'dwnl_log_adif'):
+            '''
+            Скачать лог в ADIF формате
+
+            '''
             await callback.message.delete()
             db = Database(os.getenv('DATABASE_NAME'))
             user = db.select_user_id(callback.from_user.id)[1]
             qsos = db.get_full_log(user)
             if len(qsos) != 0:
                 file = 'logs/' + user + '_' +'.adif'
-                path = os.path.join(os.path.dirname(os.path.abspath(__file__)), file)
-                with open(path, 'w') as f:
+                file_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), file)
+                with open(file_path, 'w') as f:
                     L = f'TLog ADIF export file for {user}\n<EOH>\n'
                     f.writelines(L)
                     for i in range(len(qsos)):
                         L = ''
                         L += f'<CALL:{len(qsos[i][4].strip())}>{qsos[i][4].strip()}'
-                        L += f'<QSO_DATE:{len(qsos[i][0])}>{qsos[i][0]}'
-                        L += f'<TIME_ON:{len(qsos[i][1])}>{qsos[i][1]}'
+                        qso_date = qsos[i][0].replace('-', '')
+                        L += f'<QSO_DATE:{len(qso_date)}>{qso_date}'
+                        time_on = qsos[i][1].replace(':', '')
+                        L += f'<TIME_ON:{len(time_on)}>{time_on}'
                         L += f'<BAND:{len(qsos[i][2].strip())}>{qsos[i][2].strip()}'
                         L += f'<MODE:{len(qsos[i][3].strip())}>{qsos[i][3].strip()}'
                         if qsos[i][5] is not None:
                             L += f'<GRIDSQUARE:{len(qsos[i][5].strip())}>{qsos[i][5].strip()}'
+                        L += f'<OPERATOR:{len(qsos[i][6].strip())}>{qsos[i][6].strip()}'
                         L += f'<EOR>\n'
                         f.writelines(L)
                 await bot.send_message(callback.from_user.id, text=
                             f'📌 <b>{user}</b> в логе <b>{len(qsos)}</b> QSO.\n\n'
                             f'💾 Файл лога в формате ADIF ниже 👇 \n\n'
                             )
-                document = FSInputFile(path)
+                document = FSInputFile(file_path)
                 await bot.send_document(callback.from_user.id, document)
             else:
                 await bot.send_message(callback.from_user.id, text='❌ Чтобы что-то скачать, нужно что-то загрузить!')
@@ -195,18 +260,22 @@ async def CallBaksMenu(callback: CallbackQuery, state: FSMContext, bot: Bot):
 
 
         if (callback.data == 'upload_log'):
+            '''
+            Загрузить основной лог ADIF
+
+            '''
             await callback.message.delete()
             await callback.message.answer(f'<b>Выбрано</b>: Загрузить лог')
-            await callback.message.answer(f'💡 <i><b>Загружаемый ADIF файл доллжен быть размером не более <b>10Мб</b> и должен содержать обязательные теги:</b></i> \n'
+            await callback.message.answer(f'⭐️ <i><b>ADIF файла должен содердать теги:</b></i> \n\n'
                                             f'▫️QSO_DATE - дата QSO\n'
                                             f'▫️TIME_ON - время начало QSO\n'
                                             f'▫️CALL - позывной корреспондента\n'
                                             f'▫️MODE - вид связи\n'
                                             f'▫️SUBMODE - подвид связи, необязательное поле для цифровых видов \n'
                                             f'▫️<b>BAND - диапазон должен быть указан как 13CM</b>\n'
-                                            f'▫️GRIDSQUARE - локатор корреспондента\n\n'
-                                            f'💾 <b>Чтобы приступить к загрузке нажмите на 📎 ниже, выберите файл ADIF для загрузки.</b> \n\n'
-                                            f'<i>Для отмены загрузки отправьте текстовым сообшнием слово <b>отмена</b></i>')
+                                            f'▫️GRIDSQUARE - локатор корреспондента (не обязательное поле)\n\n'
+                                            f'💾 <b>Чтобы приступить к загрузке нажмите на 📎 или перетащите файл лога в это сообщенине.</b> \n\n'
+                                            f'⚠️ <i>Для отмены загрузки отправьте текстовое сообшние <b>Отмена</b></i>')
             await state.clear()
             await state.set_state(Upload_logState.upload_adif)
 
@@ -219,19 +288,23 @@ async def CallBaksMenu(callback: CallbackQuery, state: FSMContext, bot: Bot):
         await bot.send_message(callback.from_user.id, f'⚠️ Вам необходимо зарегистрироваться! Введите /start')
 
 async def upload_adif_lotw(message: types.Message, state: FSMContext, bot: Bot):
+    '''
+    Обработка загруженого ADIF LoTW
+
+    '''
     db = Database(os.getenv('DATABASE_NAME'))
-    users = db.select_user_id(message.from_user.id)
+    user = db.select_user_id(message.from_user.id)[1]
     if message.document:
-        file = 'logs/' + users[1] + '_' + str(message.from_user.id) +'_lotw.txt'
-        download_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), file)
-        await message.bot.download(message.document, destination=download_path)
-        file_size = os.path.getsize(download_path)
+        file = 'logs/' + user + '_' + str(message.from_user.id) +'_lotw.txt'
+        file_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), file)
+        await message.bot.download(message.document, destination=file_path)
+        file_size = os.path.getsize(file_path)
         if (file_size > 12 * 1024 * 1024):
-            await bot.send_message(message.from_user.id, '⛔️ Размер файла очень большой.\n\n')
+            await bot.send_message(message.from_user.id, '⛔️ Размер файла более <b>12Мб</b>.\n\n')
             await state.clear()
-            await bot.send_message(message.from_user.id, 'Для продолжения выберите действие', reply_markup=interlinemenu())
+            await bot.send_message(message.from_user.id, '<b>☰ ГЛАВНОЕ МЕНЮ</b>', reply_markup=interlinemenu())
             return
-        await lotw(users[1], download_path, message, bot, state)
+        await lotw(file_path, message, bot)
         await state.clear()
         await bot.send_message(message.from_user.id, '💡 <i>Вы можете начать пользоваться поиском по логу. Если сейчас в сообщением отправить мне часть позывного или локатора, то произойдет поиск по вашему логу по полю позывной или локатор.</i> \n\n Либо для продолжения выберите действие из меню.', reply_markup=interlinemenu())
     else:
@@ -241,45 +314,41 @@ async def upload_adif_lotw(message: types.Message, state: FSMContext, bot: Bot):
 
 
 async def upload_adif(message: types.Message, state: FSMContext, bot: Bot):
+    '''
+    Обработка загруженого ADIF основной лог
+
+    '''
     db = Database(os.getenv('DATABASE_NAME'))
-    users = db.select_user_id(message.from_user.id)
+    user = db.select_user_id(message.from_user.id)[1]
     if message.document:
-        file = 'logs/' + users[1] + '_' + str(message.from_user.id) +'.txt'
-        download_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), file)
-        await message.bot.download(message.document, destination=download_path)
-        file_size = os.path.getsize(download_path)
+        file = 'logs/' + user + '_' + str(message.from_user.id) +'.txt'
+        file_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), file)
+        await message.bot.download(message.document, destination=file_path)
+        file_size = os.path.getsize(file_path)
         if (file_size > 10 * 1024 * 1024):
-            await bot.send_message(message.from_user.id, '⛔️ Размер файла очень большой.\n\n')
+            await bot.send_message(message.from_user.id, '⛔️ Размер файла превышает 10Мб.\n\n')
             await state.clear()
-            await bot.send_message(message.from_user.id, 'Для продолжения выберите действие', reply_markup=interlinemenu())
+            await bot.send_message(message.from_user.id, '☰ <b>ГЛАВНОЕ МЕНЮ</b>', reply_markup=interlinemenu())
             return
-        # await bot.send_message(message.from_user.id, f'✅ Файл размером <b>{round(file_size/1024, 2)}</b>Кб загружен. QRX...')
-        # await bot.send_message(message.from_user.id, '✅ Началась обработка. QRX...')
-        await adif(users[1], download_path, message, bot, state)
-        # await bot.send_message(message.from_user.id, '✅ Вышел из режима загрузки лога. \n\n')
+        # обраюботка ADIF
+        await adif(file_path, message, bot)
         await state.clear()
-        await bot.send_message(message.from_user.id, '💡 <i>Вы можете начать пользоваться поиском по логу. Если сейчас в сообщением отправить мне часть позывного или локатора, то произойдет поиск по вашему логу по полю позывной или локатор.</i> \n\n Либо для продолжения выберите действие из меню.', reply_markup=interlinemenu())
+        await bot.send_message(message.from_user.id, '💡 <i>Основной лог загружен. Для поиска по логу отправьте сообщением позывной или локатор.</i> \n\n ☰ <b>ГЛАВНОЕ МЕНЮ</b>', reply_markup=interlinemenu())
     else:
-        await message.reply("⛔️ Загрузка файла отменена.")
+        await message.reply("⛔️ Загрузка основного лога отменена.")
         await state.clear()
-        await bot.send_message(message.from_user.id, 'Для продолжения выберите действие', reply_markup=interlinemenu())
+        await bot.send_message(message.from_user.id, '☰ <b>ГЛАВНОЕ МЕНЮ</b>', reply_markup=interlinemenu())
 
 
 
-async def lotw(table_db: str, log: str, message: Message, bot: Bot, state):
+async def lotw(file_path: str, message: Message, bot: Bot):
+    '''
+    Обработка LoTW ADIF файла
+    '''
     db = Database(os.getenv('DATABASE_NAME'))
-    user = db.select_user_id(message.from_user.id)
+    user = db.select_user_id(message.from_user.id)[1]
     logbook = []
-    # try:
-    #     with open(log, 'r') as f:
-    #         raw = f.read()
-    #         # print(raw)
-    #         raw = re.split('<eor>|<eoh>')
-    raw = re.split('<EOR>|<EOH>', open(log, encoding="utf8", errors='ignore').read().upper(), flags=re.IGNORECASE)
-    # except:
-    #     await bot.send_message(message.from_user.id, '❌ Это не файл из LoTW')
-    #     return
-    n = 0
+    raw = re.split('<EOR>|<EOH>', open(file_path, encoding="utf8", errors='ignore').read().upper(), flags=re.IGNORECASE)
     if (raw[0].split('\n')[0] == 'ARRL LOGBOOK OF THE WORLD STATUS REPORT'):
         try:
             for record in raw[1:-1]:
@@ -290,48 +359,57 @@ async def lotw(table_db: str, log: str, message: Message, bot: Bot, state):
                     qso[tag[0].lower()] = tag[2][:int(tag[1])]
                     if (qso[tag[0].lower()] == 'MFSK'):
                         qso[tag[0].lower()] = 'FT4'
-                n += 1
                 if ('gridsquare' not in qso): qso['gridsquare'] = None
+                if ('state' not in qso): qso['state'] = None
+                if ('operator' not in qso): qso['operator'] = user
                 logbook.append(qso)
         except:
             await bot.send_message(message.from_user.id, '❌ Не найдены ADIF теги.')
     else:
         await bot.send_message(message.from_user.id, '❌ Загруженный файл не с сайта ARRL LoTW')
 
-    if n > 0:
-        await bot.send_message(message.from_user.id, f'✅ В файле <b>{n}</b> LoTW QSL. QRX...')
+    if (len(logbook) > 0):
+        # n = len(logbook)
+        await bot.send_message(message.from_user.id, f'✅ В файле LoTW <b>{len(logbook)}</b> QSL.')
         data = []
         try:
+            n = 0
             for i in range(len(logbook)):
                 if ('prop_mode' in logbook[i] and 'sat_name' in logbook[i]):
                     if (logbook[i]['band'] == '13CM' and logbook[i]['prop_mode'] == 'SAT' and logbook[i]['sat_name'] == 'QO-100'):
-                        data.append([logbook[i].get('call'), logbook[i].get('band'), logbook[i].get('mode'), logbook[i].get('qso_date'), logbook[i].get('time_on'), logbook[i].get('prop_mode'), logbook[i].get('sat_name'), logbook[i].get('qsl_rcvd'), logbook[i].get('dxcc'), logbook[i].get('country'), logbook[i].get('gridsquare'), logbook[i].get('cqz'), logbook[i].get('ituz')])
-            db.add_table_user(user[1])
-            db.add_user_lotw_data(user[1]+'_lotw', data)
+                        qso_date = logbook[i].get('qso_date')[:4] + '-' + logbook[i].get('qso_date')[4:6] + '-' + logbook[i].get('qso_date')[6:]
+                        time_on = logbook[i].get('time_on')[:2] + ':' + logbook[i].get('time_on')[2:4] + ':' + logbook[i].get('time_on')[4:6]
+                        data.append([logbook[i].get('call'), logbook[i].get('band'), logbook[i].get('mode'), qso_date, time_on, logbook[i].get('prop_mode'), logbook[i].get('sat_name'), logbook[i].get('qsl_rcvd'), logbook[i].get('dxcc'), logbook[i].get('country'), logbook[i].get('gridsquare'), logbook[i].get('state'), logbook[i].get('cqz'), logbook[i].get('ituz'), logbook[i].get('operator')])
+                        n += 1
         except:
             pass
+        db.add_table_user(user)
+        db.add_user_lotw_data(user+'_lotw', data)
 
 
-        await bot.send_message(message.from_user.id, f'✅ Данные LoTW отправлены в базу данных')
+        await bot.send_message(message.from_user.id, f'✅ <b>{n}</b> QO-100 LoTW QSL загружены в базу.')
 
 
 
 
 
-async def adif(table_db: str, log: str, message: Message, bot: Bot, state):
+async def adif(file_log: str, message: Message, bot: Bot):
+    '''
+    Обработка ADIF основного лога
+
+    '''
     db = Database(os.getenv('DATABASE_NAME'))
-    user = db.select_user_id(message.from_user.id)
+    user = db.select_user_id(message.from_user.id)[1]
     error = False
-    file = 'logs/' + user[1] + '_bad_log.txt'
-    upload_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), file)
-    with open(upload_path, 'w'):   pass
+    file = 'logs/' + user + '_bad_log.txt'
+    bad_file_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), file)
+    with open(bad_file_path, 'w'):   pass
     logbook = []
     try:
-        raw = re.split('<EOR>|<EOH>', open(log, encoding="utf8", errors='ignore').read().upper(), flags=re.IGNORECASE)
+        raw = re.split('<EOR>|<EOH>', open(file_log, encoding="utf8", errors='ignore').read().upper(), flags=re.IGNORECASE)
     except:
         await bot.send_message(message.from_user.id, '❌ Это не файл ADIF лога')
         return
-    n = 0
     try:
         for record in raw[1:-1]:
             qso = {}
@@ -341,32 +419,118 @@ async def adif(table_db: str, log: str, message: Message, bot: Bot, state):
                 qso[tag[0].lower()] = tag[2][:int(tag[1])]
                 if (qso[tag[0].lower()] == 'MFSK'):
                     qso[tag[0].lower()] = 'FT4'
-            n += 1
             if ('gridsquare' not in qso): qso['gridsquare'] = None
             logbook.append(qso)
     except:
         await bot.send_message(message.from_user.id, '❌ Не найдены ADIF теги.')
-    if n > 0:
-        await bot.send_message(message.from_user.id, f'✅ В файле <b>{n}</b> QSO. QRX...')
+
+    if len(logbook) > 0:
+        sum_qso = len(logbook)
+        await bot.send_message(message.from_user.id, f'✅ Загружено <b>{sum_qso}</b> QSO. QRX...')
         data = []
+        n = 0
         for i in range(len(logbook)):
             if (logbook[i].get('call') is not None) and (logbook[i].get('qso_date') is not None) and (logbook[i].get('time_on') is not None) and (logbook[i].get('band') is not None) and (logbook[i].get('mode') is not None):
-                data.append([logbook[i].get('call'), logbook[i].get('qso_date'), logbook[i].get('time_on'), logbook[i].get('band'), logbook[i].get('mode'), logbook[i].get('gridsquare')])
-
+                qso_date = logbook[i].get('qso_date')[:4] + '-' + logbook[i].get('qso_date')[4:6] + '-' + logbook[i].get('qso_date')[6:]
+                time_on = logbook[i].get('time_on')[:2] + ':' + logbook[i].get('time_on')[2:4] + ':' + logbook[i].get('time_on')[4:6]
+                logbook[i]['operator'] = user
+                if (logbook[i].get('band') == '13CM'):
+                    data.append([logbook[i].get('call'), qso_date, time_on, logbook[i].get('band'), logbook[i].get('mode'), logbook[i].get('gridsquare'), logbook[i].get('operator')])
+                    n += 1
             else:
                 error = True
                 txt = '---=== Нет полных данных о QSO ===---\n' + '; '.join([f'{key.capitalize()}: {value}' for key, value in logbook[i].items()]) + '\n\n'
-                with open(upload_path, 'a', encoding='utf-8') as f:
+                with open(bad_file_path, 'a', encoding='utf-8') as f:
                     f.write(txt)
-
-
-        db.add_table_user(user[1])
-        db.add_user_qso_data(user[1], data)
-        await bot.send_message(message.from_user.id, f'✅ Данные отправлены в базу данных')
+        db.add_table_user(user)
+        db.add_user_qso_data(user, data)
+        await bot.send_message(message.from_user.id, f'✅ <b>{n}</b> QSO за диапазон 13СМ добавлены в базу. \n')
         if error:
             await bot.send_message(message.from_user.id, f'❌ <b>При обработке файла возникли ошибки.</b> \n\n 💾 <i>Данные, которые не попали в базу, в прикрепленном файле ниже 👇</i>')
-            document = FSInputFile(upload_path)
+            document = FSInputFile(bad_file_path)
             await bot.send_document(message.from_user.id, document)
+    else:
+        await bot.send_message(message.from_user.id, '❌ В файле нет данных о QSO. Обработка завершена.')
+        return
+
+
+async def conv_adif(message: types.Message, state: FSMContext, bot: Bot):
+    '''
+    Обработка конвертиции ADIF файла
+
+    '''
+    db = Database(os.getenv('DATABASE_NAME'))
+    user = db.select_user_id(message.from_user.id)[1]
+    if message.document:
+        pass
+        file = 'logs/' + user + '_' + str(message.from_user.id) +'_conv.adi'
+        file_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), file)
+        await message.bot.download(message.document, destination=file_path)
+        file_size = os.path.getsize(file_path)
+        if (file_size > 10 * 1024 * 1024):
+            await bot.send_message(message.from_user.id, '⛔️ Размер файла превышает 10Мб.\n\n')
+            await state.clear()
+            await bot.send_message(message.from_user.id, '☰ <b>ГЛАВНОЕ МЕНЮ</b>', reply_markup=interlinemenu())
+            return
+        # обраюботка ADIF
+        await conv_adif_process(file_path, message, bot)
+        await state.clear()
+        await bot.send_message(message.from_user.id, '☰ <b>ГЛАВНОЕ МЕНЮ</b>', reply_markup=interlinemenu())
+    else:
+        await message.reply("⛔️ Конвертация ADIF отменена.")
+        await state.clear()
+        await bot.send_message(message.from_user.id, '☰ <b>ГЛАВНОЕ МЕНЮ</b>', reply_markup=interlinemenu())
+
+async def conv_adif_process(file_log: str, message: Message, bot: Bot):
+    '''
+    Обработка ADIF основного лога
+
+    '''
+    db = Database(os.getenv('DATABASE_NAME'))
+    user = db.select_user_id(message.from_user.id)[1]
+    error = False
+    file = 'logs/' + user + '_conv.adi'
+    file_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), file)
+    logbook = []
+    try:
+        raw = re.split('<EOR>|<EOH>', open(file_log, encoding="utf8", errors='ignore').read().upper(), flags=re.IGNORECASE)
+    except:
+        await bot.send_message(message.from_user.id, '❌ Это не файл ADIF лога')
+        return
+    try:
+        for record in raw[1:-1]:
+            qso = {}
+            ADIF_REC_RE = re.compile(r'<(.*?):(\d+).*?>([^<\t\f\v]+)')
+            tags = ADIF_REC_RE.findall(record)
+            for tag in tags:
+                qso[tag[0].lower()] = tag[2][:int(tag[1])]
+                if (qso[tag[0].lower()] == 'MFSK'):
+                    qso[tag[0].lower()] = 'FT4'
+            if ('gridsquare' not in qso): qso['gridsquare'] = None
+            logbook.append(qso)
+    except:
+        await bot.send_message(message.from_user.id, '❌ Не найдены ADIF теги.')
+
+    if len(logbook) > 0:
+        sum_qso = len(logbook)
+        await bot.send_message(message.from_user.id, f'✅ Загружено файл с <b>{sum_qso}</b> QSO.')
+        data = []
+        with open(file_path, 'w') as f:
+            str = f'TLog converter for {user}\n<EOH>\n'
+            f.writelines(str)
+            for i in range(len(logbook)):
+                logbook[i]['prop_mode'] = 'SAT'
+                logbook[i]['sat_name'] = 'QO-100'
+                logbook[i]['band'] = '13CM'
+                # logbook[i]['operator'] = user
+                str = ''
+                for key in logbook[i]:
+                    str += f'<{key.upper()}:{len(logbook[i][key])}>{logbook[i][key].upper()} '
+                str += '<EOR>\n'
+                f.writelines(str)
+        await bot.send_message(message.from_user.id, f'💾 Файл ADIF преобразован 👇')
+        document = FSInputFile(file_path)
+        await bot.send_document(message.from_user.id, document)
 
 
     else:

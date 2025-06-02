@@ -10,7 +10,7 @@ class Database():
         try:
             query = ('CREATE TABLE IF NOT EXISTS users('
                      'id INTEGER PRIMARY KEY,'
-                     'user_call TEXT,'
+                     'user_call TEXT UNIQUE,'
                      'user_name TEXT,'
                      'telegram_id TEXT);')
             self.cursor.execute(query)
@@ -18,12 +18,24 @@ class Database():
         except sqlite3.Error as Error:
             print('Ошибка при создании БД: ', Error)
 
-    def add_user(self, user_call, user_name, telegram_id):
+    def add_user(self, user_call, user_name, telegram_id) -> None:
+        '''
+        Добавление пользователя в базу user
+        - позывной
+        - имя
+        - Telegram ID
+
+        '''
         self.cursor.execute(f'INSERT INTO users (user_call,user_name, telegram_id) VALUES (?, ?, ?)', (user_call,user_name, telegram_id))
         self.connection.commit()
 
-    def add_table_user(self, user_call):
-        # lotwd_db = user_call + '_LoTW'
+    def add_table_user(self, user_call) -> None:
+        '''
+        Создание таблиц пользователя
+        - основной лог
+        - LoTW лог
+
+        '''
 
         try:
             query = (f'''
@@ -49,8 +61,10 @@ class Database():
                      qsl_rcvd TEXT,
                      dxcc TEXT,
                      country TEXT,
+                     state TEXT,
                      cqz INTEGER,
                      ituz INTEGER,
+                     operator TEXT,
                      PRIMARY KEY(qso_date, time_on, band, mode, call));''')
 
             self.cursor.executescript(query)
@@ -63,23 +77,39 @@ class Database():
         return users.fetchone()
 
     def add_user_qso_data(self, user_call, data):
-        self.cursor.executemany(f'INSERT OR REPLACE INTO {user_call} (call, qso_date, time_on, band, mode, gridsquare) VALUES (?, ?, ?, ?, ?, ?)', data)
+        '''
+        Добавить данные ADIF в БД основной лог
+
+        '''
+        self.cursor.executemany(f'INSERT OR REPLACE INTO {user_call} (call, qso_date, time_on, band, mode, gridsquare, operator) VALUES (?, ?, ?, ?, ?, ?, ?)', data)
         self.connection.commit()
 
+
     def add_user_lotw_data(self, user_call, data):
-        self.cursor.executemany(f'INSERT OR REPLACE INTO {user_call} (call, band, mode, qso_date, time_on, prop_mode, sat_name, qsl_rcvd, dxcc, country, gridsquare, cqz, ituz) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)', data)
+
+        '''
+        Добавить данные LoTW ADIF в БД
+
+        '''
+        self.cursor.executemany(f'INSERT OR REPLACE INTO {user_call} (call, band, mode, qso_date, time_on, prop_mode, sat_name, qsl_rcvd, dxcc, country, gridsquare, state, cqz, ituz, operator) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)', data)
         self.connection.commit()
 
     def search_qso_data(self, user_call, data):
         lotw = user_call + '_lotw'
-        query = f'''SELECT {user_call}.qso_date, {user_call}.call, {user_call}.band, {user_call}.mode,
+        query = f'''
+            SELECT date({user_call}.qso_date), {user_call}.call, {user_call}.band, {user_call}.mode,
             substr(IIF(t2.gridsquare not Null, t2.gridsquare, {user_call}.gridsquare), 1, 4) AS grid,
             IIF(t2.qsl_rcvd = 'Y', 'Y', 'N') AS qsl
             FROM {user_call}
-            LEFT JOIN {lotw} AS t2 ON {user_call}.qso_date = t2.qso_date and {user_call}.call = t2.call and {user_call}.band = t2.band and {user_call}.mode = t2.mode
+            LEFT JOIN {lotw} AS t2 ON
+                    date({user_call}.qso_date) = date(t2.qso_date) and
+                    {user_call}.call = t2.call and
+                    {user_call}.band = t2.band and
+                    {user_call}.mode = t2.mode and
+                    time({user_call}.time_on) between time(t2.time_on) and time(t2.time_on)
             WHERE {user_call}.call LIKE '%{data}%' OR grid LIKE '%{data}%'
-            GROUP BY {user_call}.qso_date, {user_call}.call, {user_call}.band, {user_call}.mode, grid, qsl
-            ORDER BY {user_call}.qso_date DESC
+            GROUP BY date({user_call}.qso_date), {user_call}.call, {user_call}.band, {user_call}.mode, grid, qsl
+            ORDER BY date({user_call}.qso_date) DESC
             LIMIT 80'''
         qsos = self.cursor.execute(query)
         return qsos.fetchall()
@@ -92,6 +122,9 @@ class Database():
         return qsos.fetchall()
 
     def get_full_log(self, user_call):
+        '''
+        Забрать весь лог
+        '''
         query_qsos = f'''
                     Select * from {user_call};
                     '''

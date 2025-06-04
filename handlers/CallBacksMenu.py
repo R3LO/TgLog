@@ -420,6 +420,8 @@ async def adif(file_log: str, message: Message, bot: Bot):
                 if (qso[tag[0].lower()] == 'MFSK'):
                     qso[tag[0].lower()] = 'FT4'
             if ('gridsquare' not in qso): qso['gridsquare'] = None
+            if ('rst_rcvd' not in qso): qso['rst_rcvd'] = None
+            if ('rst_sent' not in qso): qso['rst_sent'] = None
             logbook.append(qso)
     except:
         await bot.send_message(message.from_user.id, '❌ Не найдены ADIF теги.')
@@ -435,7 +437,7 @@ async def adif(file_log: str, message: Message, bot: Bot):
                 time_on = logbook[i].get('time_on')[:2] + ':' + logbook[i].get('time_on')[2:4] + ':' + logbook[i].get('time_on')[4:6]
                 logbook[i]['operator'] = user
                 if (logbook[i].get('band') == '13CM'):
-                    data.append([logbook[i].get('call'), qso_date, time_on, logbook[i].get('band'), logbook[i].get('mode'), logbook[i].get('gridsquare'), logbook[i].get('operator')])
+                    data.append([logbook[i].get('call'), qso_date, time_on, logbook[i].get('band'), logbook[i].get('mode'), logbook[i].get('gridsquare'), logbook[i].get('operator'), logbook[i].get('rst_rcvd'), logbook[i].get('rst_sent')])
                     n += 1
             else:
                 error = True

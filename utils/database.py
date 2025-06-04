@@ -47,6 +47,8 @@ class Database():
                      call TEXT,
                      gridsquare TEXT,
                      operator TEXT,
+                     rst_rcvd TEXT,
+                     rst_sent TEXT,
                      PRIMARY KEY(qso_date, time_on, band, mode, call));
 
                      CREATE TABLE IF NOT EXISTS {user_call+'_lotw'}(
@@ -81,7 +83,7 @@ class Database():
         Добавить данные ADIF в БД основной лог
 
         '''
-        self.cursor.executemany(f'INSERT OR REPLACE INTO {user_call} (call, qso_date, time_on, band, mode, gridsquare, operator) VALUES (?, ?, ?, ?, ?, ?, ?)', data)
+        self.cursor.executemany(f'INSERT OR REPLACE INTO {user_call} (call, qso_date, time_on, band, mode, gridsquare, operator, rst_rcvd, rst_sent) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)', data)
         self.connection.commit()
 
 
@@ -98,7 +100,12 @@ class Database():
         lotw = user_call + '_lotw'
         query = f'''
             SELECT date({user_call}.qso_date), {user_call}.call, {user_call}.band, {user_call}.mode,
-            substr(IIF(t2.gridsquare not Null, t2.gridsquare, {user_call}.gridsquare), 1, 4) AS grid,
+            substr(
+                IIF(t2.gridsquare not Null, t2.gridsquare,
+                    IIF(t2.gridsquare = '', t2.gridsquare,
+                        IIF(t2.gridsquare = 'None', t2.gridsquare, {user_call}.gridsquare)
+                    ))
+                , 1, 4) AS grid,
             IIF(t2.qsl_rcvd = 'Y', 'Y', 'N') AS qsl
             FROM {user_call}
             LEFT JOIN {lotw} AS t2 ON
@@ -135,6 +142,31 @@ class Database():
         lotw = user_call + '_lotw'
         query_qsos = f'''
                     Select count(*) from {lotw};
+                    '''
+        qsos = self.cursor.execute(query_qsos)
+        return qsos.fetchall()
+
+    def get_cosmos_uniq_log(self, user_call):
+        query_qsos = f'''
+                    SELECT IIF({user_call}.gridsquare IS NULL, t2.gridsquare,
+                                    IIF({user_call}.gridsquare = '', t2.gridsquare,
+                                        IIF({user_call}.gridsquare = 'None', t2.gridsquare, {user_call}.gridsquare)
+                                    )) as grid
+                    , {user_call}.qso_date, {user_call}.band, {user_call}.time_on, {user_call}.mode, {user_call}.call, {user_call}.rst_sent, {user_call}.rst_rcvd
+                    FROM {user_call}
+                    LEFT JOIN {user_call+'_lotw'} AS t2
+                    ON date({user_call}.qso_date) = date(t2.qso_date)
+                    and {user_call}.call = t2.call and
+                    {user_call}.band = t2.band and
+                    {user_call}.time_on = t2.mode and
+                    time({user_call}.time_on) between time(t2.time_on) and time(t2.time_on)
+                    WHERE {user_call}.call IS NOT NULL and {user_call}.band = '13CM' -- and grid IS NOT NULL
+                    -- WHERE grid IS NOT NULL AND grid <> '' AND {user_call}.call IS NOT NULL and {user_call}.band = '13CM'
+                    GROUP by {user_call}.call
+                    -- HAVING grid IS NOT NULL
+                    -- HAVING grid IS NULL
+                    ORDER BY {user_call}.qso_date ASC
+                    ;
                     '''
         qsos = self.cursor.execute(query_qsos)
         return qsos.fetchall()

@@ -6,7 +6,7 @@ import asyncio
 from dotenv import load_dotenv
 import os
 from utils.commands import set_commands
-from handlers.start import get_start, get_menu, get_stat_states, get_stat_loc, get_stat_cqz, get_stat_ituz, get_uniq_log, get_uniq_lotw
+from handlers.start import get_start, get_menu, get_stat_states, get_stat_loc, get_stat_cqz, get_stat_ituz, get_uniq_log, get_uniq_lotw, get_cosmos
 from handlers.register import start_register, register_call, register_name
 from handlers.my_profile import my_profile
 from handlers.CallBacksMenu import upload_adif, upload_adif_lotw, conv_adif
@@ -41,6 +41,7 @@ dp.message.register(get_stat_cqz, Command(commands='stat_cqz'))
 dp.message.register(get_stat_ituz, Command(commands='stat_ituz'))
 dp.message.register(get_uniq_log, Command(commands='uniq_log'))
 dp.message.register(get_uniq_lotw, Command(commands='uniq_lotw'))
+dp.message.register(get_cosmos, Command(commands='cosmos'))
 
 # Регистируем хендлеры регистрации
 dp.message.register(start_register, F.text=='✅ РЕГИСТРАЦИЯ')

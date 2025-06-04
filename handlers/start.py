@@ -85,6 +85,29 @@ async def get_stat_ituz(message: Message, bot: Bot):
                            f'{msg}\n 👍 ВСЕГО ITU зон: <b>{i+1}</b>'
                            )
 
+async def get_cosmos(message: Message, bot: Bot):
+    db = Database(os.getenv('DATABASE_NAME'))
+    user = db.select_user_id(message.from_user.id)[1]
+    cosmos_log = db.get_cosmos_uniq_log(user)
+    file = 'logs/' + user + '_cosmos_log.csv'
+    file_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), file)
+    txt = f''
+    for i in range(len(cosmos_log)):
+        if cosmos_log[i][0] is None:
+            loc = 'None'
+        else:
+            loc = cosmos_log[i][0][0:4]
+        txt += f'{i+1};{loc};{cosmos_log[i][1]};{cosmos_log[i][2]};{cosmos_log[i][3][0:5]};{cosmos_log[i][4][0:5]};{cosmos_log[i][5]};{cosmos_log[i][6]};{cosmos_log[i][7]}\n'
+    with open(file_path, 'w', encoding='utf-8') as f:
+        f.write(txt)
+    await bot.send_message(message.from_user.id, text=
+                        f'📌 <b>{user}</b> в завке на диплом Cosmos <b>{len(cosmos_log)}</b> уникальных позывных.\n\n'
+                        f'💾 Файл выписки заявки на диплом Cosmos 👇 \n\n'
+                        )
+    document = FSInputFile(file_path)
+    await bot.send_document(message.from_user.id, document)
+
+
 async def get_uniq_log(message: Message, bot: Bot):
     db = Database(os.getenv('DATABASE_NAME'))
     user = db.select_user_id(message.from_user.id)[1]
@@ -97,7 +120,7 @@ async def get_uniq_log(message: Message, bot: Bot):
     with open(upload_path, 'w', encoding='utf-8') as f:
         f.write(txt)
     await bot.send_message(message.from_user.id, text=
-                        f'📌 <b>{user}</b> в логе <b>{len(uniq_log)}</b> позывных юникальные.\n\n'
+                        f'📌 <b>{user}</b> в логе <b>{len(uniq_log)}</b> позывных уникальные.\n\n'
                         f'💾 Файл со списом уникальных позывных ниже 👇 \n\n'
                         )
     document = FSInputFile(upload_path)

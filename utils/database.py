@@ -237,6 +237,18 @@ class Database():
         stat = self.cursor.execute(query_qsos)
         return stat.fetchall()
 
+    def get_stat_ru(self, user_call):
+        lotw = user_call + '_lotw'
+        query_qsos = f'''
+                    SELECT state as Region, count(*) as QSO from {lotw}
+                    WHERE country in ('EUROPEAN RUSSIA', 'ASIATIC RUSSIA', 'KALININGRAD')
+                    GROUP BY state
+                    HAVING state <> ''
+                    ORDER BY state ASC;
+                    '''
+        stat = self.cursor.execute(query_qsos)
+        return stat.fetchall()
+
 
     def get_stat_bands(self, user_call):
         query_qsos = f'''

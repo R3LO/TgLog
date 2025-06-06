@@ -85,13 +85,29 @@ async def get_stat_ituz(message: Message, bot: Bot):
                            f'{msg}\n 👍 ВСЕГО ITU зон: <b>{i+1}</b>'
                            )
 
+async def get_stat_ru(message: Message, bot: Bot):
+    db = Database(os.getenv('DATABASE_NAME'))
+    user = db.select_user_id(message.from_user.id)[1]
+    stat_ru = db.get_stat_ru(user)
+    msg = f'🏆 <b>Районы России LoTW CFM for {user} только для 🛰 QO-100</b>\n(Районы России -- CFM)\n'
+    for i in range(len(stat_ru)):
+        msg += f'{i+1}:  {stat_ru[i][0]}  -  {stat_ru[i][1]}\n'
+    await bot.send_message(message.from_user.id,
+                           f'{msg}\n 👍 Российских регионов: <b>{i+1}</b>'
+                           )
+
 async def get_cosmos(message: Message, bot: Bot):
+    '''
+    Выписка для длиплома Cosmos
+
+    '''
     db = Database(os.getenv('DATABASE_NAME'))
     user = db.select_user_id(message.from_user.id)[1]
     cosmos_log = db.get_cosmos_uniq_log(user)
     file = 'logs/' + user + '_cosmos_log.csv'
     file_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), file)
     txt = f''
+
     for i in range(len(cosmos_log)):
         if cosmos_log[i][0] is None:
             loc = 'None'

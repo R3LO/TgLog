@@ -249,8 +249,10 @@ async def CallBaksMenu(callback: CallbackQuery, state: FSMContext, bot: Bot):
                                     f'/stat_loc - спиок подтверденных локаторов из LoTW\n'
                                     f'/stat_cqz - спиок подтверденных CQ зон из LoTW\n'
                                     f'/stat_ituz - список подтверденных ITU зон из LoTW\n'
+                                    f'/stat_ru - CFM Российские регионы в LoTW\n'
                                     f'/uniq_log - список уникальных позывных по логу\n'
                                     f'/uniq_lotw - список уникальных позывных по LoTW\n'
+
                                     )
             except:
                 await bot.send_message(callback.from_user.id, f'⚠️ Логи либо не загружены, либо ошибка базы данных.')

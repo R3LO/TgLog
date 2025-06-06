@@ -10,11 +10,11 @@ async def set_commands(bot: Bot):
         BotCommand(
           command='menu',
           description='Главное меню'
+        ),
+        BotCommand(
+          command='cosmos',
+          description='Сформировать заявку на диплом Cosmos Russia'
         )
-        # BotCommand(
-        #   command='stat_states',
-        #   description='Показать страны подтвержденные страны DXCC из LoTW'
-        # ),
         # BotCommand(
         #   command='stat_loc',
         #   description='Показать подтвержденные локаторы из LoTW'

@@ -1,3 +1,5 @@
+# -*- coding: UTF-8 -*-
+
 from aiogram import Bot, types
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
@@ -24,6 +26,53 @@ async def CallBaksMenu(callback: CallbackQuery, state: FSMContext, bot: Bot):
     user = db.select_user_id(callback.from_user.id)
 
     if (user):
+        if (callback.data == 'my_diploma'):
+            '''
+            Кнопка Мои дипломы
+
+            '''
+            await callback.message.delete()
+            kb = InlineKeyboardBuilder()
+            user = db.select_user_id(callback.from_user.id)[1]
+            q_rus = len(db.get_stat_ru(user))
+            q_rus_mark = '⭐️' if q_rus >= 25 else  '❌'
+            q_loc = len(db.get_stat_loc(user))
+            q_loc_mark = '⭐️' if q_loc >= 500 else  '❌'
+            q_states = len(db.get_stat_states(user))
+            q_states_mark = '⭐️' if q_states >= 100 else  '❌'
+            q_unique = len(db.get_total_uniq_lotw(user))
+            q_unique_mark = '⭐️' if q_unique >= 1000 else  '❌'
+            kb.button(text=f'{q_rus_mark} W-QO100-R [{q_rus} из 25]', callback_data='dip_qo-100-russia')
+            kb.button(text=f'{q_loc_mark} W-QO100-L [{q_loc} из 500]', callback_data='dip_qo-100-locators')
+            kb.button(text=f'{q_states_mark} W-QO100-C [{q_states} из 100]', callback_data='dip_qo-100-countries')
+            kb.button(text=f'{q_unique_mark} W-QO100-U [{q_unique} из 1000]', callback_data='dip_qo-100-unique')
+            # kb.button(text='✓ Синхронизировать лог с LoTW', callback_data='upload_lotw')
+            # kb.button(text='✗ Отмена', callback_data='clbk_cancel')
+            kb.adjust(1)
+            await bot.send_message(callback.from_user.id,
+                                   f'🏆 <b>Дипломная программа QO-100-RUSSIA</b> \n\n'
+                                   f'➡️ <b>W-QO100-R</b> - работал с 25 регионами 🇷🇺 России\n'
+                                   f'➡️ <b>W-QO100-C</b> - работаал со 100 странами по списку DXCC\n'
+                                   f'➡️ <b>W-QO100-L</b> - работал с 500 различными QTH локаторами\n'
+                                   f'➡️ <b>W-QO100-U</b> - работал с 1000 различными позывнями\n'
+                                   f'\n<i>💡 Учитываются радиосвязи подтвержденные через LoTW</i>\n',
+                                   reply_markup=kb.as_markup())
+
+
+        if (callback.data == 'dip_qo-100-russia'):
+            await bot.send_message(callback.from_user.id,
+                                   f'⚠️ Выдача дипломов в стадии тестирования. QRX...')
+        if (callback.data == 'dip_qo-100-locators'):
+            await bot.send_message(callback.from_user.id,
+                                   f'⚠️ Выдача дипломов в стадии тестирования. QRX...')
+        if (callback.data == 'dip_qo-100-countries'):
+            await bot.send_message(callback.from_user.id,
+                                   f'⚠️ Выдача дипломов в стадии тестирования. QRX...')
+        if (callback.data == 'dip_qo-100-unique'):
+            await bot.send_message(callback.from_user.id,
+                                   f'⚠️ Выдача дипломов в стадии тестирования. QRX...')
+
+
         if (callback.data == 'conv_log'):
             '''
             Кнопка конвертировать лог
@@ -208,9 +257,6 @@ async def CallBaksMenu(callback: CallbackQuery, state: FSMContext, bot: Bot):
 
         if (callback.data == 'qo100_log'):
             await bot.send_message(callback.from_user.id, f'⚠️ Конвертер в стадии тестирования')
-
-        if (callback.data == 'my_diploma'):
-            await bot.send_message(callback.from_user.id, f'⚠️ Выдача дипломов в стадии тестирования')
 
         if (callback.data == 'statistics'):
             db = Database(os.getenv('DATABASE_NAME'))
@@ -447,6 +493,7 @@ async def adif(file_log: str, message: Message, bot: Bot):
                 with open(bad_file_path, 'a', encoding='utf-8') as f:
                     f.write(txt)
         db.add_table_user(user)
+        print(data)
         db.add_user_qso_data(user, data)
         await bot.send_message(message.from_user.id, f'✅ <b>{n}</b> QSO за диапазон 13СМ добавлены в базу. \n')
         if error:

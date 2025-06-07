@@ -12,7 +12,7 @@ def interlinemenu():
 
     # kb.button(text='❌🗞 Подробный поиск по логу', callback_data='full_search')
     kb.button(text='📊 Статистика', callback_data='statistics')
-    # kb.button(text='❌🏆 Мои дипломы', callback_data='my_diploma')
+    kb.button(text='🏆 Мои дипломы', callback_data='my_diploma')
     # kb.button(text='❌🆘 Помощь', callback_data='help')
 
 

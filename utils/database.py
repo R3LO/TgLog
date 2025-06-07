@@ -240,7 +240,8 @@ class Database():
     def get_stat_ru(self, user_call):
         lotw = user_call + '_lotw'
         query_qsos = f'''
-                    SELECT state as Region, count(*) as QSO from {lotw}
+                    SELECT rr.description, call from {lotw}
+                    LEFT JOIN rda_reg rr ON {lotw}.state = rr.rda
                     WHERE country in ('EUROPEAN RUSSIA', 'ASIATIC RUSSIA', 'KALININGRAD')
                     GROUP BY state
                     HAVING state <> ''

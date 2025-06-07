@@ -89,7 +89,7 @@ async def get_stat_ru(message: Message, bot: Bot):
     db = Database(os.getenv('DATABASE_NAME'))
     user = db.select_user_id(message.from_user.id)[1]
     stat_ru = db.get_stat_ru(user)
-    msg = f'🏆 <b>Районы России LoTW CFM for {user} только для 🛰 QO-100</b>\n(Районы России -- CFM)\n'
+    msg = f'🏆 <b>Районы России LoTW CFM for {user} только для 🛰 QO-100</b>\n\n👇 Районы России -- Позывной CFM\n\n'
     for i in range(len(stat_ru)):
         msg += f'{i+1}:  {stat_ru[i][0]}  -  {stat_ru[i][1]}\n'
     await bot.send_message(message.from_user.id,

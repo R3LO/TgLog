@@ -14,6 +14,7 @@ from state.conv_adif import Conv_AdifState
 from keyboards.inline_menu_kb import interlinemenu
 from utils.database import Database
 from keyboards.inline_menu_kb import interlinemenu
+from handlers.create_pdf import create_w100c_pdf
 import os
 import re
 
@@ -42,19 +43,23 @@ async def CallBaksMenu(callback: CallbackQuery, state: FSMContext, bot: Bot):
             q_states_mark = '⭐️' if q_states >= 100 else  '❌'
             q_unique = len(db.get_total_uniq_lotw(user))
             q_unique_mark = '⭐️' if q_unique >= 1000 else  '❌'
+            q_base = db.get_total_qso_log(user)[0][0]
+            q_base_mark = '⭐️' if q_unique >= 1000 else  '❌'
             kb.button(text=f'{q_rus_mark} W-QO100-R [{q_rus} из 25]', callback_data='dip_qo-100-russia')
-            kb.button(text=f'{q_loc_mark} W-QO100-L [{q_loc} из 500]', callback_data='dip_qo-100-locators')
             kb.button(text=f'{q_states_mark} W-QO100-C [{q_states} из 100]', callback_data='dip_qo-100-countries')
+            kb.button(text=f'{q_loc_mark} W-QO100-L [{q_loc} из 500]', callback_data='dip_qo-100-locators')
             kb.button(text=f'{q_unique_mark} W-QO100-U [{q_unique} из 1000]', callback_data='dip_qo-100-unique')
+            kb.button(text=f'{q_base_mark} W-QO100-B [{q_base} QSO]', callback_data='dip_qo-100-base')
             # kb.button(text='✓ Синхронизировать лог с LoTW', callback_data='upload_lotw')
             # kb.button(text='✗ Отмена', callback_data='clbk_cancel')
             kb.adjust(1)
             await bot.send_message(callback.from_user.id,
-                                   f'🏆 <b>Дипломная программа QO-100-RUSSIA</b> \n\n'
+                                   f'🏆 <b>Дипломная программа 📡 QO-100-RUSSIA</b> \n\n'
                                    f'➡️ <b>W-QO100-R</b> - работал с 25 регионами 🇷🇺 России\n'
-                                   f'➡️ <b>W-QO100-C</b> - работаал со 100 странами по списку DXCC\n'
+                                   f'➡️ <b>W-QO100-C</b> - работал со 100 странами по списку DXCC\n'
                                    f'➡️ <b>W-QO100-L</b> - работал с 500 различными QTH локаторами\n'
-                                   f'➡️ <b>W-QO100-U</b> - работал с 1000 различными позывнями\n'
+                                   f'➡️ <b>W-QO100-U</b> - работал с 1000 различными позывными\n'
+                                   f'➡️ <b>W-QO100-B</b> - базовый диплом, 1000 связей в логе\n'
                                    f'\n<i>💡 Учитываются радиосвязи подтвержденные через LoTW</i>\n',
                                    reply_markup=kb.as_markup())
 
@@ -65,10 +70,61 @@ async def CallBaksMenu(callback: CallbackQuery, state: FSMContext, bot: Bot):
         if (callback.data == 'dip_qo-100-locators'):
             await bot.send_message(callback.from_user.id,
                                    f'⚠️ Выдача дипломов в стадии тестирования. QRX...')
+
+# -----------------------------------------------------------------------------------------------------------------------------------------
+
         if (callback.data == 'dip_qo-100-countries'):
+            await callback.message.delete()
+            last_number = db.get_last_number_diplomas('w100c')[1]
+            user = db.select_user_id(callback.from_user.id)[1]
+            q_states = len(db.get_stat_states(user))
+            if q_states < 100:
+                await bot.send_message(callback.from_user.id,
+                                f'⚠️ Диплом <b>W-QO100-C</b> пока не выполнен.\n'
+                                f'❗️Для получения диплома необходимо полученить QSL LoTW как минимум за работу со 100 странами по списку DXCC через 🛰 QO-100.\n'
+                                f'💡 <i>Возможно вы не загрузили файл отчета из LoTW. \nПерейдите в Загрузку лога, нажмите на кнопку Синхронизировать лог с LoTW, отправьте файл отчета полученный с LoTW</i>\n')
+            else:
+                last_number += 1
+                res =db.check_call_diplomas(user, 'w100c')
+                kb = InlineKeyboardBuilder()
+                kb.button(text=f'✅ Скачать PDF', callback_data='get_pdf_w100c')
+                kb.button(text='✗ Отмена', callback_data='clbk_cancel')
+                kb.adjust(1)
+
+                if res: # есть в базе
+
+                    await bot.send_message(callback.from_user.id,
+                                    f'🏆 Вам выписан диплом <b>W-QO100-C</b> #{res[0]}.\n'
+                                    '💡 <i>Диплом можно скачать в фломате PDF</i>', reply_markup=kb.as_markup())
+                else: # нет в базе
+                    db.add_call_diplomas(user, 'w100c', last_number)
+                    await bot.send_message(callback.from_user.id,
+                                    f'🏆 Поздравляем, диплом <b>W-QO100-C</b> #{last_number} выполнен.\n'
+                                    '💡 <i>Диплом можно скачать в фломате PDF</i>', reply_markup=kb.as_markup())
+
+        if (callback.data == 'get_pdf_w100c'):
+            user = db.select_user_id(callback.from_user.id)
+            res =db.check_call_diplomas(user[1], 'w100c')
+            states = len(db.get_stat_states(user[1]))
+            # print(res)
+            create_w100c_pdf(user[1], user[2], res[0], states)
+            await bot.send_message(callback.from_user.id, text=
+                            f'💾 PDF скоро будет готов. QRX... \n\n')
+            pdf = user[1] + '_w100c.pdf'
+            document = FSInputFile(pdf)
+            await bot.send_document(callback.from_user.id, document)
+            # await bot.send_message(callback.from_user.id,
+            #                         f'{user[1]} {user[2]} {res[0]}')
+
+# -----------------------------------------------------------------------------------------------------------------------------------------
+
+
+
+
+        if (callback.data == 'dip_qo-100-unique'):
             await bot.send_message(callback.from_user.id,
                                    f'⚠️ Выдача дипломов в стадии тестирования. QRX...')
-        if (callback.data == 'dip_qo-100-unique'):
+        if (callback.data == 'dip_qo-100-base'):
             await bot.send_message(callback.from_user.id,
                                    f'⚠️ Выдача дипломов в стадии тестирования. QRX...')
 
@@ -400,6 +456,7 @@ async def lotw(file_path: str, message: Message, bot: Bot):
     if (raw[0].split('\n')[0] == 'ARRL LOGBOOK OF THE WORLD STATUS REPORT'):
         try:
             for record in raw[1:-1]:
+                if (':0><' in record): record = record.replace(':0><', ':1> <')
                 qso = {}
                 ADIF_REC_RE = re.compile(r'<(.*?):(\d+).*?>([^<\t\f\v]+)')
                 tags = ADIF_REC_RE.findall(record)
@@ -460,6 +517,7 @@ async def adif(file_log: str, message: Message, bot: Bot):
         return
     try:
         for record in raw[1:-1]:
+            if (':0><' in record): record = record.replace(':0><', ':1> <')
             qso = {}
             ADIF_REC_RE = re.compile(r'<(.*?):(\d+).*?>([^<\t\f\v]+)')
             tags = ADIF_REC_RE.findall(record)
@@ -493,7 +551,6 @@ async def adif(file_log: str, message: Message, bot: Bot):
                 with open(bad_file_path, 'a', encoding='utf-8') as f:
                     f.write(txt)
         db.add_table_user(user)
-        print(data)
         db.add_user_qso_data(user, data)
         await bot.send_message(message.from_user.id, f'✅ <b>{n}</b> QSO за диапазон 13СМ добавлены в базу. \n')
         if error:
@@ -550,14 +607,13 @@ async def conv_adif_process(file_log: str, message: Message, bot: Bot):
         return
     try:
         for record in raw[1:-1]:
+            if (':0><' in record): record = record.replace(':0><', ':1> <')
             qso = {}
             ADIF_REC_RE = re.compile(r'<(.*?):(\d+).*?>([^<\t\f\v]+)')
             tags = ADIF_REC_RE.findall(record)
             for tag in tags:
                 qso[tag[0].lower()] = tag[2][:int(tag[1])]
-                if (qso[tag[0].lower()] == 'MFSK'):
-                    qso[tag[0].lower()] = 'FT4'
-            if ('gridsquare' not in qso): qso['gridsquare'] = None
+            # if ('gridsquare' not in qso): qso['gridsquare'] = ' '
             logbook.append(qso)
     except:
         await bot.send_message(message.from_user.id, '❌ Не найдены ADIF теги.')

@@ -12,11 +12,50 @@ class Database():
                      'id INTEGER PRIMARY KEY,'
                      'user_call TEXT UNIQUE,'
                      'user_name TEXT,'
-                     'telegram_id TEXT);')
-            self.cursor.execute(query)
+                     'telegram_id TEXT);'
+
+                     'CREATE TABLE IF NOT EXISTS w100c('
+                     'call TEXT UNIQUE PRIMARY KEY,'
+                     'number INTEGER NOT NULL DEFAULT 0)')
+
+            self.cursor.executescript(query)
             self.connection.commit()
         except sqlite3.Error as Error:
             print('Ошибка при создании БД: ', Error)
+
+    def check_call_diplomas(self, user, table):
+        query = f'''
+                SELECT number FROM {table}
+                WHERE call = '{user}'
+                LIMIT 1
+                ;
+                '''
+        numbers = self.cursor.execute(query)
+        res = numbers.fetchone()
+        if res is None:
+            return 0
+        else:
+            return res
+
+
+    def get_last_number_diplomas(self, table):
+        query = f'''
+                    SELECT * FROM {table}
+                    ORDER BY number DESC
+                    LIMIT 1;
+                    '''
+        numbers = self.cursor.execute(query)
+        last_number = numbers.fetchone()
+        if last_number is None:
+            return (0, 0)
+        else:
+            return last_number
+
+    def add_call_diplomas(self, user, table, number):
+        self.cursor.execute(f'INSERT OR REPLACE INTO w100c (call, number) VALUES (?, ?)', (user, number))
+        self.connection.commit()
+
+
 
     def add_user(self, user_call, user_name, telegram_id) -> None:
         '''

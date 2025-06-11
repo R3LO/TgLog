@@ -16,7 +16,11 @@ class Database():
 
                      'CREATE TABLE IF NOT EXISTS w100c('
                      'call TEXT UNIQUE PRIMARY KEY,'
-                     'number INTEGER NOT NULL DEFAULT 0)')
+                     'number INTEGER NOT NULL DEFAULT 0);'
+
+                     'CREATE TABLE IF NOT EXISTS w100l('
+                     'call TEXT UNIQUE PRIMARY KEY,'
+                     'number INTEGER NOT NULL DEFAULT 0);')
 
             self.cursor.executescript(query)
             self.connection.commit()
@@ -52,7 +56,7 @@ class Database():
             return last_number
 
     def add_call_diplomas(self, user, table, number):
-        self.cursor.execute(f'INSERT OR REPLACE INTO w100c (call, number) VALUES (?, ?)', (user, number))
+        self.cursor.execute(f'INSERT OR REPLACE INTO {table} (call, number) VALUES (?, ?)', (user, number))
         self.connection.commit()
 
 

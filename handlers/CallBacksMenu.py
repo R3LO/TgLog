@@ -14,7 +14,7 @@ from state.conv_adif import Conv_AdifState
 from keyboards.inline_menu_kb import interlinemenu
 from utils.database import Database
 from keyboards.inline_menu_kb import interlinemenu
-from handlers.create_pdf import create_w100c_pdf
+from handlers.create_pdf import create_w100c_pdf, create_w100l_pdf
 import os
 import re
 
@@ -67,9 +67,52 @@ async def CallBaksMenu(callback: CallbackQuery, state: FSMContext, bot: Bot):
         if (callback.data == 'dip_qo-100-russia'):
             await bot.send_message(callback.from_user.id,
                                    f'⚠️ Выдача дипломов в стадии тестирования. QRX...')
+
+# -----------------------------------------------------------------------------------------------------------------------------------------
+
         if (callback.data == 'dip_qo-100-locators'):
-            await bot.send_message(callback.from_user.id,
-                                   f'⚠️ Выдача дипломов в стадии тестирования. QRX...')
+            await callback.message.delete()
+            last_number = db.get_last_number_diplomas('w100l')[1]
+            user = db.select_user_id(callback.from_user.id)[1]
+            q_locators = len(db.get_stat_loc(user))
+            if q_locators < 500:
+                await bot.send_message(callback.from_user.id,
+                                f'⚠️ Диплом <b>W-QO100-L</b> пока не выполнен.\n'
+                                f'❗️Для получения диплома необходимо полученить QSL LoTW как минимум за работу с 500 QTH локаторами через 🛰 QO-100.\n'
+                                f'💡 <i>Возможно вы не загрузили файл отчета из LoTW. \nПерейдите в Загрузку лога, нажмите на кнопку Синхронизировать лог с LoTW, отправьте файл отчета полученный с LoTW</i>\n')
+            else:
+                last_number += 1
+                res =db.check_call_diplomas(user, 'w100l')
+                kb = InlineKeyboardBuilder()
+                kb.button(text=f'✅ Скачать PDF', callback_data='get_pdf_w100l')
+                kb.button(text='✗ Отмена', callback_data='clbk_cancel')
+                kb.adjust(1)
+
+                if res: # есть в базе
+
+                    await bot.send_message(callback.from_user.id,
+                                    f'🏆 Вам выписан диплом <b>W-QO100-L</b> #{res[0]}.\n'
+                                    '💡 <i>Диплом можно скачать в фломате PDF</i>', reply_markup=kb.as_markup())
+                else: # нет в базе
+                    db.add_call_diplomas(user, 'w100l', last_number)
+                    await bot.send_message(callback.from_user.id,
+                                    f'🏆 Поздравляем, диплом <b>W-QO100-L</b> #{last_number} выполнен.\n'
+                                    '💡 <i>Диплом можно скачать в фломате PDF</i>', reply_markup=kb.as_markup())
+
+        if (callback.data == 'get_pdf_w100l'):
+            user = db.select_user_id(callback.from_user.id)
+            res =db.check_call_diplomas(user[1], 'w100l')
+            # print('user', user)
+            # print('res', res)
+            locators = len(db.get_stat_loc(user[1]))
+            # print('locs', locators)
+            create_w100l_pdf(user[1], user[2], res, locators)
+            await bot.send_message(callback.from_user.id, text=
+                            f'💾 PDF скоро будет готов. QRX... \n\n')
+            pdf = user[1] + '_w500l.pdf'
+            document = FSInputFile(pdf)
+            await bot.send_document(callback.from_user.id, document)
+
 
 # -----------------------------------------------------------------------------------------------------------------------------------------
 
@@ -113,8 +156,6 @@ async def CallBaksMenu(callback: CallbackQuery, state: FSMContext, bot: Bot):
             pdf = user[1] + '_w100c.pdf'
             document = FSInputFile(pdf)
             await bot.send_document(callback.from_user.id, document)
-            # await bot.send_message(callback.from_user.id,
-            #                         f'{user[1]} {user[2]} {res[0]}')
 
 # -----------------------------------------------------------------------------------------------------------------------------------------
 

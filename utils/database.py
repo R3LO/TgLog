@@ -20,6 +20,10 @@ class Database():
 
                      'CREATE TABLE IF NOT EXISTS w100l('
                      'call TEXT UNIQUE PRIMARY KEY,'
+                     'number INTEGER NOT NULL DEFAULT 0);'
+
+                    'CREATE TABLE IF NOT EXISTS w1000b('
+                     'call TEXT UNIQUE PRIMARY KEY,'
                      'number INTEGER NOT NULL DEFAULT 0);')
 
             self.cursor.executescript(query)

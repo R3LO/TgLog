@@ -110,3 +110,53 @@ def create_w100l_pdf(user, name, number, locators):
 
 
     pdf_file.save()
+
+# -----------------------------------------------------------------------------------------------------------------------------------------
+
+def create_w1000b_pdf(user, name, number, qsos):
+    file = 'fonts/LorenzoSans.ttf'
+    img = "fonts/w1000bt.png"
+    file_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), file)
+    img_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), img)
+
+    # Создаем новый PDF-файл
+    pdf = user + '_w1000b.pdf'
+    pdf_file = canvas.Canvas(pdf, pagesize=landscape(A4))
+    width, height = A4
+
+    # Добавляем иоюражение
+    pdf_file.drawImage(img_path, 0, 0, width=height, height=width)
+
+    # Добавляем позывной
+    pdfmetrics.registerFont(TTFont('LorenzoSans', file_path))
+    pdf_file.setFillColorRGB(0, 0, 0.5)  # цвет
+    # pdf_file.setFillColorRGB(0, 0, 1)  # Синий цвет
+    pdf_file.setFont("LorenzoSans", 54)
+    # pdf_file.drawCentredString(width - 240, height - 555, user.upper())  # Заголовок
+    pdf_file.drawCentredString(440, 240, user.upper())  # Заголовок
+
+    # номер диплома
+    pdfmetrics.registerFont(TTFont('LorenzoSans', file_path))
+    pdf_file.setFillColorRGB(0, 0, 0.5)  # Синий цвет
+    # pdf_file.setFillColorRGB(0, 0, 1)  # Синий цвет
+    pdf_file.setFont("LorenzoSans", 10)
+    pdf_file.drawCentredString(450, 75, f'#{str(number)} от {time.strftime("%d-%m-%Y")}')  # Заголовок
+
+
+    # текст награды
+    from textwrap import wrap
+    text = f'''Награждается {name} за проведение {qsos} QSO с любительскими радиостанциями через спутник QO-100'''
+    pdfmetrics.registerFont(TTFont('LorenzoSans', file_path))
+    pdf_file.setFillColorRGB(0, 0, 0.5)  # Синий цвет
+    # pdf_file.setFillColorRGB(0, 0, 1)  # Синий цвет
+    pdf_file.setFont("LorenzoSans", 18)
+    for i, s in enumerate(wrap(text, 48)):
+        # y_step  = 25 * i межстрочный интервал
+        y_step  = 19 * i
+        # y_start = 200 - y_step по высоте
+        y_start = 210 - y_step
+        # pdf_file.drawCentredString(440, y_start, s) по горизонтали
+        pdf_file.drawCentredString(430, y_start, s)
+
+
+    pdf_file.save()

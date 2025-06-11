@@ -14,7 +14,7 @@ from state.conv_adif import Conv_AdifState
 from keyboards.inline_menu_kb import interlinemenu
 from utils.database import Database
 from keyboards.inline_menu_kb import interlinemenu
-from handlers.create_pdf import create_w100c_pdf, create_w100l_pdf
+from handlers.create_pdf import create_w100c_pdf, create_w100l_pdf, create_w1000b_pdf
 import os
 import re
 
@@ -165,9 +165,55 @@ async def CallBaksMenu(callback: CallbackQuery, state: FSMContext, bot: Bot):
         if (callback.data == 'dip_qo-100-unique'):
             await bot.send_message(callback.from_user.id,
                                    f'⚠️ Выдача дипломов в стадии тестирования. QRX...')
+
+# -----------------------------------------------------------------------------------------------------------------------------------------
+
         if (callback.data == 'dip_qo-100-base'):
-            await bot.send_message(callback.from_user.id,
-                                   f'⚠️ Выдача дипломов в стадии тестирования. QRX...')
+            await callback.message.delete()
+            last_number = db.get_last_number_diplomas('w1000b')[1]
+            user = db.select_user_id(callback.from_user.id)[1]
+            q_qsos = db.get_total_qso_log(user)[0][0]
+            if q_qsos < 1000:
+                await bot.send_message(callback.from_user.id,
+                                f'⚠️ Диплом <b>W-QO100-B</b> пока не выполнен.\n'
+                                f'❗️Для получения диплома необходимо провести 1000 QSO через 🛰 QO-100.\n'
+                                f'💡 <i>Возможно вы не загрузили QSO в основной лог. \nПерейдите в Загрузку лога, нажмите на кнопку Загрузить основной лог</i>\n')
+            else:
+                last_number += 1
+                res =db.check_call_diplomas(user, 'w1000b')
+                kb = InlineKeyboardBuilder()
+                kb.button(text=f'✅ Скачать PDF', callback_data='get_pdf_w1000b')
+                kb.button(text='✗ Отмена', callback_data='clbk_cancel')
+                kb.adjust(1)
+
+                if res: # есть в базе
+
+                    await bot.send_message(callback.from_user.id,
+                                    f'🏆 Вам выписан диплом <b>W-QO100-L</b> #{res[0]}.\n'
+                                    '💡 <i>Диплом можно скачать в фломате PDF</i>', reply_markup=kb.as_markup())
+                else: # нет в базе
+                    print(res)
+                    db.add_call_diplomas(user, 'w1000b', last_number)
+                    await bot.send_message(callback.from_user.id,
+                                    f'🏆 Поздравляем, диплом <b>W-QO100-L</b> #{last_number} выполнен.\n'
+                                    '💡 <i>Диплом можно скачать в фломате PDF</i>', reply_markup=kb.as_markup())
+
+        if (callback.data == 'get_pdf_w1000b'):
+            user = db.select_user_id(callback.from_user.id)
+            res =db.check_call_diplomas(user[1], 'w1000b')
+            # print('user', user)
+            # print('res', res)
+            qsos = db.get_total_qso_log(user[1])[0][0]
+            # print('qsos', qsos)
+            create_w1000b_pdf(user[1], user[2], res[0], qsos)
+            await bot.send_message(callback.from_user.id, text=
+                            f'💾 PDF скоро будет готов. QRX... \n\n')
+            pdf = user[1] + '_w1000b.pdf'
+            document = FSInputFile(pdf)
+            await bot.send_document(callback.from_user.id, document)
+
+
+# -----------------------------------------------------------------------------------------------------------------------------------------
 
 
         if (callback.data == 'conv_log'):

@@ -14,7 +14,7 @@ from state.conv_adif import Conv_AdifState
 from keyboards.inline_menu_kb import interlinemenu
 from utils.database import Database
 from keyboards.inline_menu_kb import interlinemenu
-from handlers.create_pdf import create_w100c_pdf, create_w100l_pdf, create_w1000b_pdf
+from handlers.create_pdf import create_w100c_pdf, create_w100l_pdf, create_w1000b_pdf, create_w1000u_pdf, create_w25r_pdf
 import os
 import re
 
@@ -35,6 +35,7 @@ async def CallBaksMenu(callback: CallbackQuery, state: FSMContext, bot: Bot):
             await callback.message.delete()
             kb = InlineKeyboardBuilder()
             user = db.select_user_id(callback.from_user.id)[1]
+            # user = 'LZ1GHT'
             q_rus = len(db.get_stat_ru(user))
             q_rus_mark = '⭐️' if q_rus >= 25 else  '❌'
             q_loc = len(db.get_stat_loc(user))
@@ -44,11 +45,11 @@ async def CallBaksMenu(callback: CallbackQuery, state: FSMContext, bot: Bot):
             q_unique = len(db.get_total_uniq_lotw(user))
             q_unique_mark = '⭐️' if q_unique >= 1000 else  '❌'
             q_base = db.get_total_qso_log(user)[0][0]
-            q_base_mark = '⭐️' if q_unique >= 1000 else  '❌'
+            q_base_mark = '⭐️' if q_base >= 1000 else  '❌'
             kb.button(text=f'{q_rus_mark} W-QO100-R [{q_rus} из 25]', callback_data='dip_qo-100-russia')
             kb.button(text=f'{q_states_mark} W-QO100-C [{q_states} из 100]', callback_data='dip_qo-100-countries')
             kb.button(text=f'{q_loc_mark} W-QO100-L [{q_loc} из 500]', callback_data='dip_qo-100-locators')
-            kb.button(text=f'{q_unique_mark} W-QO100-U [{q_unique} из 1000]', callback_data='dip_qo-100-unique')
+            kb.button(text=f'{q_unique_mark} W-QO1000-U [{q_unique} из 1000]', callback_data='dip_qo-1000-unique')
             kb.button(text=f'{q_base_mark} W-QO100-B [{q_base} QSO]', callback_data='dip_qo-100-base')
             # kb.button(text='✓ Синхронизировать лог с LoTW', callback_data='upload_lotw')
             # kb.button(text='✗ Отмена', callback_data='clbk_cancel')
@@ -63,10 +64,52 @@ async def CallBaksMenu(callback: CallbackQuery, state: FSMContext, bot: Bot):
                                    f'\n<i>💡 Учитываются радиосвязи подтвержденные через LoTW</i>\n',
                                    reply_markup=kb.as_markup())
 
+# -----------------------------------------------------------------------------------------------------------------------------------------
 
         if (callback.data == 'dip_qo-100-russia'):
-            await bot.send_message(callback.from_user.id,
-                                   f'⚠️ Выдача дипломов в стадии тестирования. QRX...')
+            await callback.message.delete()
+            last_number = db.get_last_number_diplomas('w25r')[1]
+            user = db.select_user_id(callback.from_user.id)[1]
+            # user = 'RA4HGN'
+            q_rus = len(db.get_stat_ru(user))
+            if q_rus < 25:
+                await bot.send_message(callback.from_user.id,
+                                f'⚠️ Диплом <b>W-QO100-R</b> пока не выполнен.\n'
+                                f'❗️Для получения диплома необходимо провести и получить подтверждения LoTW от радиостанций работавшие как минимум из 25 регионов России\n'
+                                f'💡 <i>Возможно вы не загрузили QSO в основной лог. \nПерейдите в Загрузку лога, нажмите на кнопку Загрузить основной лог</i>\n')
+            else:
+                last_number += 1
+                res =db.check_call_diplomas(user, 'w25r')
+                kb = InlineKeyboardBuilder()
+                kb.button(text=f'✅ Скачать PDF', callback_data='get_pdf_w25r')
+                kb.button(text='✗ Отмена', callback_data='clbk_cancel')
+                kb.adjust(1)
+
+                if res: # есть в базе
+
+                    await bot.send_message(callback.from_user.id,
+                                    f'🏆 Вам выписан диплом <b>W-QO100-R</b> #{res[0]}.\n'
+                                    '💡 <i>Диплом можно скачать в формате PDF</i>', reply_markup=kb.as_markup())
+                else: # нет в базе
+        #             print(res)
+                    db.add_call_diplomas(user, 'w25r', last_number)
+                    await bot.send_message(callback.from_user.id,
+                                    f'🏆 Поздравляем, диплом <b>W-QO100-R</b> #{last_number} выполнен.\n'
+                                    '💡 <i>Диплом можно скачать в формате PDF</i>', reply_markup=kb.as_markup())
+
+        if (callback.data == 'get_pdf_w25r'):
+            user = db.select_user_id(callback.from_user.id)
+            res =db.check_call_diplomas(user[1], 'w25r')
+            # print('user', user)
+            # print('res', res)
+            rus = len(db.get_stat_ru(user[1]))
+            # print('rus', rus)
+            create_w25r_pdf(user[1], user[2], res[0], rus)
+            await bot.send_message(callback.from_user.id, text=
+                            f'💾 PDF скоро будет готов. QRX... \n\n')
+            pdf = user[1] + '_w25r.pdf'
+            document = FSInputFile(pdf)
+            await bot.send_document(callback.from_user.id, document)
 
 # -----------------------------------------------------------------------------------------------------------------------------------------
 
@@ -92,12 +135,12 @@ async def CallBaksMenu(callback: CallbackQuery, state: FSMContext, bot: Bot):
 
                     await bot.send_message(callback.from_user.id,
                                     f'🏆 Вам выписан диплом <b>W-QO100-L</b> #{res[0]}.\n'
-                                    '💡 <i>Диплом можно скачать в фломате PDF</i>', reply_markup=kb.as_markup())
+                                    '💡 <i>Диплом можно скачать в формате PDF</i>', reply_markup=kb.as_markup())
                 else: # нет в базе
                     db.add_call_diplomas(user, 'w100l', last_number)
                     await bot.send_message(callback.from_user.id,
                                     f'🏆 Поздравляем, диплом <b>W-QO100-L</b> #{last_number} выполнен.\n'
-                                    '💡 <i>Диплом можно скачать в фломате PDF</i>', reply_markup=kb.as_markup())
+                                    '💡 <i>Диплом можно скачать в формате PDF</i>', reply_markup=kb.as_markup())
 
         if (callback.data == 'get_pdf_w100l'):
             user = db.select_user_id(callback.from_user.id)
@@ -138,12 +181,12 @@ async def CallBaksMenu(callback: CallbackQuery, state: FSMContext, bot: Bot):
 
                     await bot.send_message(callback.from_user.id,
                                     f'🏆 Вам выписан диплом <b>W-QO100-C</b> #{res[0]}.\n'
-                                    '💡 <i>Диплом можно скачать в фломате PDF</i>', reply_markup=kb.as_markup())
+                                    '💡 <i>Диплом можно скачать в формате PDF</i>', reply_markup=kb.as_markup())
                 else: # нет в базе
                     db.add_call_diplomas(user, 'w100c', last_number)
                     await bot.send_message(callback.from_user.id,
                                     f'🏆 Поздравляем, диплом <b>W-QO100-C</b> #{last_number} выполнен.\n'
-                                    '💡 <i>Диплом можно скачать в фломате PDF</i>', reply_markup=kb.as_markup())
+                                    '💡 <i>Диплом можно скачать в формате PDF</i>', reply_markup=kb.as_markup())
 
         if (callback.data == 'get_pdf_w100c'):
             user = db.select_user_id(callback.from_user.id)
@@ -160,11 +203,51 @@ async def CallBaksMenu(callback: CallbackQuery, state: FSMContext, bot: Bot):
 # -----------------------------------------------------------------------------------------------------------------------------------------
 
 
+        if (callback.data == 'dip_qo-1000-unique'):
+            await callback.message.delete()
+            last_number = db.get_last_number_diplomas('w1000u')[1]
+            user = db.select_user_id(callback.from_user.id)[1]
+            # user = 'RA4HGN'
+            q_unique = len(db.get_total_uniq_lotw(user))
+            if q_unique < 1000:
+                await bot.send_message(callback.from_user.id,
+                                f'⚠️ Диплом <b>W-QO100-U</b> пока не выполнен.\n'
+                                f'❗️Для получения диплома необходимо провести и получить подтверждения LoTW как минимум от 1000 различными радиостанциями через 🛰 QO-100.\n'
+                                f'💡 <i>Возможно вы не загрузили QSO в основной лог. \nПерейдите в Загрузку лога, нажмите на кнопку Загрузить основной лог</i>\n')
+            else:
+                last_number += 1
+                res =db.check_call_diplomas(user, 'w1000u')
+                kb = InlineKeyboardBuilder()
+                kb.button(text=f'✅ Скачать PDF', callback_data='get_pdf_w1000u')
+                kb.button(text='✗ Отмена', callback_data='clbk_cancel')
+                kb.adjust(1)
 
+                if res: # есть в базе
 
-        if (callback.data == 'dip_qo-100-unique'):
-            await bot.send_message(callback.from_user.id,
-                                   f'⚠️ Выдача дипломов в стадии тестирования. QRX...')
+                    await bot.send_message(callback.from_user.id,
+                                    f'🏆 Вам выписан диплом <b>W-QO100-U</b> #{res[0]}.\n'
+                                    '💡 <i>Диплом можно скачать в формате PDF</i>', reply_markup=kb.as_markup())
+                else: # нет в базе
+        #             print(res)
+                    db.add_call_diplomas(user, 'w1000u', last_number)
+                    await bot.send_message(callback.from_user.id,
+                                    f'🏆 Поздравляем, диплом <b>W-QO100-U</b> #{last_number} выполнен.\n'
+                                    '💡 <i>Диплом можно скачать в формате PDF</i>', reply_markup=kb.as_markup())
+
+        if (callback.data == 'get_pdf_w1000u'):
+            user = db.select_user_id(callback.from_user.id)
+            res =db.check_call_diplomas(user[1], 'w1000u')
+            # print('user', user)
+            # print('res', res)
+            unique = len(db.get_total_uniq_lotw(user[1]))
+            # print('unique', unique)
+            create_w1000u_pdf(user[1], user[2], res[0], unique)
+            await bot.send_message(callback.from_user.id, text=
+                            f'💾 PDF скоро будет готов. QRX... \n\n')
+            pdf = user[1] + '_w1000u.pdf'
+            document = FSInputFile(pdf)
+            await bot.send_document(callback.from_user.id, document)
+
 
 # -----------------------------------------------------------------------------------------------------------------------------------------
 
@@ -172,6 +255,7 @@ async def CallBaksMenu(callback: CallbackQuery, state: FSMContext, bot: Bot):
             await callback.message.delete()
             last_number = db.get_last_number_diplomas('w1000b')[1]
             user = db.select_user_id(callback.from_user.id)[1]
+            # user = 'RA4HGN'
             q_qsos = db.get_total_qso_log(user)[0][0]
             if q_qsos < 1000:
                 await bot.send_message(callback.from_user.id,
@@ -189,14 +273,14 @@ async def CallBaksMenu(callback: CallbackQuery, state: FSMContext, bot: Bot):
                 if res: # есть в базе
 
                     await bot.send_message(callback.from_user.id,
-                                    f'🏆 Вам выписан диплом <b>W-QO100-L</b> #{res[0]}.\n'
-                                    '💡 <i>Диплом можно скачать в фломате PDF</i>', reply_markup=kb.as_markup())
+                                    f'🏆 Вам выписан диплом <b>W-QO100-B</b> #{res[0]}.\n'
+                                    '💡 <i>Диплом можно скачать в формате PDF</i>', reply_markup=kb.as_markup())
                 else: # нет в базе
                     print(res)
                     db.add_call_diplomas(user, 'w1000b', last_number)
                     await bot.send_message(callback.from_user.id,
-                                    f'🏆 Поздравляем, диплом <b>W-QO100-L</b> #{last_number} выполнен.\n'
-                                    '💡 <i>Диплом можно скачать в фломате PDF</i>', reply_markup=kb.as_markup())
+                                    f'🏆 Поздравляем, диплом <b>W-QO100-B</b> #{last_number} выполнен.\n'
+                                    '💡 <i>Диплом можно скачать в формате PDF</i>', reply_markup=kb.as_markup())
 
         if (callback.data == 'get_pdf_w1000b'):
             user = db.select_user_id(callback.from_user.id)

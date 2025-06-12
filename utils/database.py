@@ -24,6 +24,14 @@ class Database():
 
                     'CREATE TABLE IF NOT EXISTS w1000b('
                      'call TEXT UNIQUE PRIMARY KEY,'
+                     'number INTEGER NOT NULL DEFAULT 0);'
+
+                     'CREATE TABLE IF NOT EXISTS w1000u('
+                     'call TEXT UNIQUE PRIMARY KEY,'
+                     'number INTEGER NOT NULL DEFAULT 0);'
+
+                     'CREATE TABLE IF NOT EXISTS w25r('
+                     'call TEXT UNIQUE PRIMARY KEY,'
                      'number INTEGER NOT NULL DEFAULT 0);')
 
             self.cursor.executescript(query)
@@ -156,11 +164,11 @@ class Database():
             IIF(t2.qsl_rcvd = 'Y', 'Y', 'N') AS qsl
             FROM {user_call}
             LEFT JOIN {lotw} AS t2 ON
-                    date({user_call}.qso_date) = date(t2.qso_date) and
-                    {user_call}.call = t2.call and
-                    {user_call}.band = t2.band and
-                    {user_call}.mode = t2.mode and
-                    time({user_call}.time_on) between time(t2.time_on) and time(t2.time_on)
+                    date({user_call}.qso_date) = date(t2.qso_date)
+                    and {user_call}.call = t2.call
+                    and {user_call}.band = t2.band
+                    and {user_call}.mode = t2.mode
+                    and time({user_call}.time_on) between time(t2.time_on) and time(t2.time_on)
             WHERE {user_call}.call LIKE '%{data}%' OR grid LIKE '%{data}%'
             GROUP BY date({user_call}.qso_date), {user_call}.call, {user_call}.band, {user_call}.mode, grid, qsl
             ORDER BY date({user_call}.qso_date) DESC

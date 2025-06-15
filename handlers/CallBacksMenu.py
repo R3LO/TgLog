@@ -15,6 +15,7 @@ from keyboards.inline_menu_kb import interlinemenu
 from utils.database import Database
 from keyboards.inline_menu_kb import interlinemenu
 from handlers.create_pdf import create_w100c_pdf, create_w100l_pdf, create_w1000b_pdf, create_w1000u_pdf, create_w25r_pdf
+from handlers.rating import rating
 import os
 import re
 
@@ -27,6 +28,37 @@ async def CallBaksMenu(callback: CallbackQuery, state: FSMContext, bot: Bot):
     user = db.select_user_id(callback.from_user.id)
 
     if (user):
+        if (callback.data == 'rating'):
+            await callback.message.delete()
+            res = rating()
+
+            msg = '📡 <b>Рейтинг пользователей 🛰 QO-100</b>\n\n💡 <i>По данным полученным из LoTW</i>\n\n'
+
+            msg = msg + '\n➡️ Регионы России \n\n'
+            for i in range(len(res[0])):
+                msg = msg + f'{i+1} <b>{res[0][i][0]}</b> {res[0][i][1]}\n'
+
+            msg = msg + '\n➡️ Cтраны по списку DXCC \n\n'
+            for i in range(len(res[1])):
+                msg = msg + f'{i+1} <b>{res[1][i][0]}</b> {res[1][i][1]}\n'
+
+            msg = msg + '\n➡️ QTH локаторы \n\n'
+            for i in range(len(res[2])):
+                msg = msg + f'{i+1} <b>{res[2][i][0]}</b> {res[2][i][1]}\n'
+
+            msg = msg + '\n➡️ Уникальные позывне (без повторов) \n\n'
+            for i in range(len(res[3])):
+                msg = msg + f'{i+1} <b>{res[3][i][0]}</b> {res[3][i][1]}\n'
+
+            msg = msg + '\nДля продолжения запустите /menu'
+
+
+
+            await bot.send_message(callback.from_user.id, msg)
+
+
+
+
         if (callback.data == 'my_diploma'):
             '''
             Кнопка Мои дипломы
@@ -35,7 +67,7 @@ async def CallBaksMenu(callback: CallbackQuery, state: FSMContext, bot: Bot):
             await callback.message.delete()
             kb = InlineKeyboardBuilder()
             user = db.select_user_id(callback.from_user.id)[1]
-            # user = 'LZ1GHT'
+            # user = 'RA3DNC'
             q_rus = len(db.get_stat_ru(user))
             q_rus_mark = '⭐️' if q_rus >= 25 else  '❌'
             q_loc = len(db.get_stat_loc(user))
@@ -70,7 +102,7 @@ async def CallBaksMenu(callback: CallbackQuery, state: FSMContext, bot: Bot):
             await callback.message.delete()
             last_number = db.get_last_number_diplomas('w25r')[1]
             user = db.select_user_id(callback.from_user.id)[1]
-            # user = 'RA4HGN'
+            # user = 'RA3DNC'
             q_rus = len(db.get_stat_ru(user))
             if q_rus < 25:
                 await bot.send_message(callback.from_user.id,

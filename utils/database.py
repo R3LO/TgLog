@@ -188,7 +188,8 @@ class Database():
         Забрать весь лог
         '''
         query_qsos = f'''
-                    Select * from {user_call};
+                    Select * from {user_call}
+                    ORDER BY qso_date ASC;
                     '''
         qsos = self.cursor.execute(query_qsos)
         return qsos.fetchall()

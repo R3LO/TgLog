@@ -488,17 +488,17 @@ async def CallBaksMenu(callback: CallbackQuery, state: FSMContext, bot: Bot):
                     f.writelines(L)
                     for i in range(len(qsos)):
                         L = ''
-                        L += f'<CALL:{len(qsos[i][4].strip())}>{qsos[i][4].strip()}'
+                        L += f'<CALL:{len(qsos[i][4].strip())}>{qsos[i][4].strip()} '
                         qso_date = qsos[i][0].replace('-', '')
-                        L += f'<QSO_DATE:{len(qso_date)}>{qso_date}'
+                        L += f'<QSO_DATE:{len(qso_date)}>{qso_date} '
                         time_on = qsos[i][1].replace(':', '')
-                        L += f'<TIME_ON:{len(time_on)}>{time_on}'
-                        L += f'<BAND:{len(qsos[i][2].strip())}>{qsos[i][2].strip()}'
-                        L += f'<MODE:{len(qsos[i][3].strip())}>{qsos[i][3].strip()}'
+                        L += f'<TIME_ON:{len(time_on)}>{time_on} '
+                        L += f'<BAND:{len(qsos[i][2].strip())}>{qsos[i][2].strip()} '
+                        L += f'<MODE:{len(qsos[i][3].strip())}>{qsos[i][3].strip()} '
                         if qsos[i][5] is not None:
-                            L += f'<GRIDSQUARE:{len(qsos[i][5].strip())}>{qsos[i][5].strip()}'
-                        L += f'<OPERATOR:{len(qsos[i][6].strip())}>{qsos[i][6].strip()}'
-                        L += f'<EOR>\n'
+                            L += f'<GRIDSQUARE:{len(qsos[i][5].strip())}>{qsos[i][5].strip()} '
+                        L += f'<OPERATOR:{len(qsos[i][6].strip())}>{qsos[i][6].strip()} '
+                        L += f'<PROP_MODE>SAT <SAT_NAME>QO-100 <EOR>\n'
                         f.writelines(L)
                 await bot.send_message(callback.from_user.id, text=
                             f'📌 <b>{user}</b> в логе <b>{len(qsos)}</b> QSO.\n\n'

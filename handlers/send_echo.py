@@ -3,29 +3,31 @@ from aiogram.types import Message
 from aiogram.types import ContentType
 from keyboards.inline_menu_kb import interlinemenu
 from utils.database import Database
+
 import os
 
 async def send_echo(message: Message, bot: Bot):
     db = Database(os.getenv('DATABASE_NAME'))
     user = db.select_user_id(message.from_user.id)
-    # print(message.text)
-    if (user and message.text):
-        if ('🌍' in message.text):
-                loc = message.text[message.text.find('🌍'):].split()[1][0:4]
-                await res_db(user[1].upper(), message, loc, bot)
-        if ('FT4' in message.text or 'FT8' in message.text):
-                call = message.text.split()[5]
+    if message.content_type == 'text':
+        # print(message.text)
+        if (user and message.text):
+            if ('🌍' in message.text):
+                    loc = message.text[message.text.find('🌍'):].split()[1][0:4]
+                    await res_db(user[1].upper(), message, loc, bot)
+            if ('FT4' in message.text or 'FT8' in message.text):
+                    call = message.text.split()[5]
+                    await res_db(user[1].upper(), message, call, bot)
+            if ('CW' in message.text or 'SSB' in message.text or 'DIGI' in message.text):
+                    call = message.text.split()[3]
+                    await res_db(user[1].upper(), message, call, bot)
+            if ('🌍' not in message.text and 'FT4' not in message.text and 'FT8' not in message.text and 'DIGI' not in message.text and 'CW' not in message.text and 'SSB' not in message.text):
+                call = message.text
                 await res_db(user[1].upper(), message, call, bot)
-        if ('CW' in message.text or 'SSB' in message.text or 'DIGI' in message.text):
-                call = message.text.split()[3]
-                await res_db(user[1].upper(), message, call, bot)
-        if ('🌍' not in message.text and 'FT4' not in message.text and 'FT8' not in message.text and 'DIGI' not in message.text and 'CW' not in message.text and 'SSB' not in message.text):
-            call = message.text
-            await res_db(user[1].upper(), message, call, bot)
+        else:
+            await bot.send_message(message.from_user.id, f'⚠️ Начните рабюту с регистрации, кнопки МЕНЮ или с команды /start')
     else:
-        await bot.send_message(message.from_user.id, f'⚠️ Начните рабюту с регистрации, кнопки МЕНЮ или с команды /start')
-
-    # await bot.send_message(message.from_user.id, text='⁉️ Ничего не выбрано из меню. \n Для продолжения выберите действие', reply_markup=interlinemenu())
+        await bot.send_message(message.from_user.id, f'⁉️ Неправильная загрузка! Загружайте ADIF файлы через Основное меню 👇', reply_markup=interlinemenu())
 
 
 async def res_db(user: str, message: Message, m: str, bot: Bot):

@@ -8,14 +8,15 @@ from reportlab.lib.styles import getSampleStyleSheet
 from reportlab.platypus import SimpleDocTemplate, Paragraph
 from reportlab.lib.styles import ParagraphStyle
 from reportlab.lib.units import inch
-
+from fluentogram import TranslatorRunner
+from textwrap import wrap
 from reportlab.lib import colors
 import os
 import time
 
 
 
-def create_w100c_pdf(user, name, number, states):
+def create_w100c_pdf(user, name, number, states, i18n):
     file = 'fonts/LorenzoSans.ttf'
     img = "fonts/w100ct.png"
     file_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), file)
@@ -33,7 +34,7 @@ def create_w100c_pdf(user, name, number, states):
     pdfmetrics.registerFont(TTFont('LorenzoSans', file_path))
     pdf_file.setFillColorRGB(0, 0, 0.5)  # Синий цвет
     # pdf_file.setFillColorRGB(0, 0, 1)  # Синий цвет
-    pdf_file.setFont("LorenzoSans", 34)
+    pdf_file.setFont("LorenzoSans", 50)
     pdf_file.drawCentredString(width - 160, height - 560, user)  # Заголовок
 
     # номер диплома
@@ -41,12 +42,12 @@ def create_w100c_pdf(user, name, number, states):
     pdf_file.setFillColorRGB(0, 0, 0.5)  # Синий цвет
     # pdf_file.setFillColorRGB(0, 0, 1)  # Синий цвет
     pdf_file.setFont("LorenzoSans", 10)
-    pdf_file.drawCentredString(width - 160, 50, f'#{str(number)} от {time.strftime("%d-%m-%Y")}')  # Заголовок
+    pdf_file.drawCentredString(width - 160, 50, f'#{str(number)} - {time.strftime("%d-%m-%Y")}')  # Заголовок
 
 
     # текст награды
-    from textwrap import wrap
-    text = f'''Награждается {name} за проведение радиосвязей с любительскими радиостанциями {states} различных стран мира по списку DXCC'''
+    # text = f'''Награждается {name} за проведение радиосвязей с любительскими радиостанциями {states} различных стран мира по списку DXCC'''
+    text = i18n.w100c.text(name=name, states=states)
     pdfmetrics.registerFont(TTFont('LorenzoSans', file_path))
     pdf_file.setFillColorRGB(0, 0, 0.5)  # Синий цвет
     # pdf_file.setFillColorRGB(0, 0, 1)  # Синий цвет
@@ -64,7 +65,7 @@ def create_w100c_pdf(user, name, number, states):
 
 # -----------------------------------------------------------------------------------------------------------------------------------------
 
-def create_w100l_pdf(user, name, number, locators):
+def create_w100l_pdf(user, name, number, locators, i18n):
     file = 'fonts/LorenzoSans.ttf'
     img = "fonts/w500lt.png"
     file_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), file)
@@ -90,12 +91,13 @@ def create_w100l_pdf(user, name, number, locators):
     pdf_file.setFillColorRGB(0, 0, 0.5)  # Синий цвет
     # pdf_file.setFillColorRGB(0, 0, 1)  # Синий цвет
     pdf_file.setFont("LorenzoSans", 10)
-    pdf_file.drawCentredString(width - 100, 62, f'#{str(number[0])} от {time.strftime("%d-%m-%Y")}')  # Заголовок
+    pdf_file.drawCentredString(width - 100, 62, f'#{str(number[0])} - {time.strftime("%d-%m-%Y")}')  # Заголовок
 
 
     # текст награды
-    from textwrap import wrap
-    text = f'''Награждается {name} за проведение радиосвязей с любительскими радиостанциями из {locators} различных QTH локаторов через спутник QO-100'''
+
+    # text = f'''Награждается {name} за проведение радиосвязей с любительскими радиостанциями из {locators} различных QTH локаторов через спутник QO-100'''
+    text = i18n.w100l.text(name=name, locators=locators)
     pdfmetrics.registerFont(TTFont('LorenzoSans', file_path))
     pdf_file.setFillColorRGB(0, 0, 0.5)  # Синий цвет
     # pdf_file.setFillColorRGB(0, 0, 1)  # Синий цвет
@@ -104,7 +106,7 @@ def create_w100l_pdf(user, name, number, locators):
         # y_step  = 25 * i межстрочный интервал
         y_step  = 19 * i
         # y_start = 200 - y_step по высоте
-        y_start = 210 - y_step
+        y_start = 200 - y_step
         # pdf_file.drawCentredString(440, y_start, s) по горизонтали
         pdf_file.drawCentredString(490, y_start, s)
 
@@ -113,7 +115,7 @@ def create_w100l_pdf(user, name, number, locators):
 
 # -----------------------------------------------------------------------------------------------------------------------------------------
 
-def create_w1000b_pdf(user, name, number, qsos):
+def create_w1000b_pdf(user, name, number, qsos, i18n):
     file = 'fonts/LorenzoSans.ttf'
     img = "fonts/w1000bt.png"
     file_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), file)
@@ -140,12 +142,13 @@ def create_w1000b_pdf(user, name, number, qsos):
     pdf_file.setFillColorRGB(0, 0, 0.5)  # Синий цвет
     # pdf_file.setFillColorRGB(0, 0, 1)  # Синий цвет
     pdf_file.setFont("LorenzoSans", 10)
-    pdf_file.drawCentredString(450, 75, f'#{str(number)} от {time.strftime("%d-%m-%Y")}')  # Заголовок
+    pdf_file.drawCentredString(450, 75, f'#{str(number)} - {time.strftime("%d-%m-%Y")}')  # Заголовок
 
 
     # текст награды
     from textwrap import wrap
-    text = f'''Награждается {name} за проведение {qsos} QSO с любительскими радиостанциями через спутник QO-100'''
+    # text = f'''Награждается {name} за проведение {qsos} QSO с любительскими радиостанциями через спутник QO-100'''
+    text = i18n.w100b.text(name=name, qsos=qsos)
     pdfmetrics.registerFont(TTFont('LorenzoSans', file_path))
     pdf_file.setFillColorRGB(0, 0, 0.5)  # Синий цвет
     # pdf_file.setFillColorRGB(0, 0, 1)  # Синий цвет
@@ -154,7 +157,7 @@ def create_w1000b_pdf(user, name, number, qsos):
         # y_step  = 25 * i межстрочный интервал
         y_step  = 19 * i
         # y_start = 200 - y_step по высоте
-        y_start = 210 - y_step
+        y_start = 200 - y_step
         # pdf_file.drawCentredString(440, y_start, s) по горизонтали
         pdf_file.drawCentredString(430, y_start, s)
 
@@ -163,7 +166,7 @@ def create_w1000b_pdf(user, name, number, qsos):
 
 # -----------------------------------------------------------------------------------------------------------------------------------------
 
-def create_w1000u_pdf(user, name, number, unique):
+def create_w1000u_pdf(user, name, number, unique, i18n):
     file = 'fonts/LorenzoSans.ttf'
     img = "fonts/w1000ut.png"
     file_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), file)
@@ -190,12 +193,12 @@ def create_w1000u_pdf(user, name, number, unique):
     pdf_file.setFillColorRGB(0, 0, 0.5)  # Синий цвет
     # pdf_file.setFillColorRGB(0, 0, 1)  # Синий цвет
     pdf_file.setFont("LorenzoSans", 10)
-    pdf_file.drawCentredString(520, 55, f'#{str(number)} от {time.strftime("%d-%m-%Y")}')  # Заголовок
+    pdf_file.drawCentredString(520, 55, f'#{str(number)} - {time.strftime("%d-%m-%Y")}')  # Заголовок
 
 
     # текст награды
-    from textwrap import wrap
-    text = f'''Награждается {name} за проведение {unique} уникальных QSO с любительскими радиостанциями через спутник QO-100'''
+    # text = f'''Награждается {name} за проведение {unique} уникальных QSO с любительскими радиостанциями через спутник QO-100'''
+    text = i18n.w100u.text(name=name, unique=unique)
     pdfmetrics.registerFont(TTFont('LorenzoSans', file_path))
     pdf_file.setFillColorRGB(0, 0, 0.5)  # Синий цвет
     # pdf_file.setFillColorRGB(0, 0, 1)  # Синий цвет
@@ -204,7 +207,7 @@ def create_w1000u_pdf(user, name, number, unique):
         # y_step  = 25 * i межстрочный интервал
         y_step  = 19 * i
         # y_start = 200 - y_step по высоте
-        y_start = 170 - y_step
+        y_start = 160 - y_step
         # pdf_file.drawCentredString(440, y_start, s) по горизонтали
         pdf_file.drawCentredString(540, y_start, s)
 
@@ -213,7 +216,7 @@ def create_w1000u_pdf(user, name, number, unique):
 
 # -----------------------------------------------------------------------------------------------------------------------------------------
 
-def create_w25r_pdf(user, name, number, rus):
+def create_w25r_pdf(user, name, number, rus, i18n):
     file = 'fonts/LorenzoSans.ttf'
     img = "fonts/w25rt.png"
     file_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), file)
@@ -240,12 +243,13 @@ def create_w25r_pdf(user, name, number, rus):
     pdf_file.setFillColorRGB(0, 0, 0.5)  # Синий цвет
     # pdf_file.setFillColorRGB(0, 0, 1)  # Синий цвет
     pdf_file.setFont("LorenzoSans", 10)
-    pdf_file.drawCentredString(270, 63, f'#{str(number)} от {time.strftime("%d-%m-%Y")}')  # Заголовок
+    pdf_file.drawCentredString(270, 63, f'#{str(number)} - {time.strftime("%d-%m-%Y")}')  # Заголовок
 
 
     # текст награды
     from textwrap import wrap
-    text = f'''Награждается {name} за проведение любительских радиосвязей с {rus} регионами России через спутник QO-100'''
+    # text = f'''Награждается {name} за проведение любительских радиосвязей с {rus} регионами России через спутник QO-100'''
+    text = i18n.w25r.text(name=name, rus=rus)
     pdfmetrics.registerFont(TTFont('LorenzoSans', file_path))
     pdf_file.setFillColorRGB(0, 0, 0.5)  # Синий цвет
     # pdf_file.setFillColorRGB(0, 0, 1)  # Синий цвет
@@ -254,7 +258,7 @@ def create_w25r_pdf(user, name, number, rus):
         # y_step  = 25 * i межстрочный интервал
         y_step  = 19 * i
         # y_start = 200 - y_step по высоте
-        y_start = 185 - y_step
+        y_start = 180 - y_step
         # pdf_file.drawCentredString(440, y_start, s) по горизонтали
         pdf_file.drawCentredString(320, y_start, s)
 

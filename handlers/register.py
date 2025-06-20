@@ -1,45 +1,66 @@
 from aiogram import Bot
 from aiogram.types import Message
+from aiogram import F
+from aiogram import Router
 from aiogram.fsm.context import FSMContext
+from aiogram.filters import Command, CommandStart, StateFilter
 from state.register import RegisterState
+from keyboards.inline_menu_kb import interlinemenu
 from utils.database import Database
-# from keyboards.menu_kb import main_menu
-from keyboards.main_kb import main_kb
-import re
+from aiogram.types import CallbackQuery
+from fluentogram import TranslatorRunner
+from aiogram.fsm.state import default_state
+# from keyboards.main_kb import main_kb
 import os
-import asyncio
+
+# Инициализируем роутер уровня модуля
+router = Router()
+
+# Этот хэндлер будет срабатывать на команду "/cancel" в состоянии
+# по умолчанию и сообщать, что эта команда работает внутри машины состояний
+@router.message(Command(commands='cancel'), StateFilter(default_state))
+async def process_cancel_command(message: Message, i18n: TranslatorRunner,):
+    await message.answer(
+        text=i18n.nil.cancel())
+
+# Этот хэндлер будет срабатывать на команду "/cancel" в любых состояниях,
+# кроме состояния по умолчанию, и отключать машину состояний
+@router.message(Command(commands='cancel'), ~StateFilter(default_state))
+async def process_cancel_command_state(message: Message, i18n: TranslatorRunner, state: FSMContext):
+    await message.answer(text=i18n.reg.cancel())
+    # Сбрасываем состояние и очищаем данные, полученные внутри состояний
+    await state.clear()
 
 
-async def start_register(message: Message, state: FSMContext, bot: Bot):
+@router.callback_query(F.data == 'new_user_registration')
+async def new_user_registration(callback: CallbackQuery, i18n: TranslatorRunner, state: FSMContext, bot: Bot):
+    # await callback.message.delete()
     db = Database(os.getenv('DATABASE_NAME'))
-    users = db.select_user_id(message.from_user.id)
+    users = db.select_user_id(callback.from_user.id)
     if (users):
-        await bot.send_message(message.from_user.id, f'Вы уже зарегистрированы на позывной <b>{users[1]}</b>')
+        await bot.send_message(callback.from_user.id, f'Вы уже зарегистрированы на позывной <b>{users[1]}</b>')
     else:
-        await bot.send_message(message.from_user.id, f'⭐️ <b>Давайте начнем регистрацию</b> ⭐️ \n\n'
-                            f'➡️ Введите в сообщении 👇 ваш основной позывной. \n\n'
-                            f'💡 На ваш позывной будет открыт специальный аппаратный журанл. Позывной должен быть без дробей. ')
+        await bot.send_message(callback.from_user.id, text=i18n.regist.call())
         await state.set_state(RegisterState.regCall)
 
-async def register_call(message: Message, state: FSMContext, bot: Bot):
-    await bot.send_message(message.from_user.id, f'👌 Вы ввели позывной <b>{message.md_text.upper()}</b> ⭐️ \n\n'
-                         f'➡️ Теперь введите в сообщении 👇 ваше имя и фаимилию. \n\n'
-                         f'💡 Имя и фамилия будет использоваться для вставки в выдаваемые электронные дипломы от нашего сервиса. Можно указать только имя или что-то на ваше усмотрение.')
+
+@router.message(StateFilter(RegisterState.regCall))
+async def register_call(message: Message, i18n: TranslatorRunner, state: FSMContext, bot: Bot):
     await state.update_data(regcall=message.text.upper())
+    reg_data = await state.get_data()
+    reg_call = reg_data.get('regcall')
+    await bot.send_message(message.from_user.id, i18n.regist.name(reg_call=reg_call))
     await state.set_state(RegisterState.regName)
 
-async def register_name(message: Message, state: FSMContext, bot: Bot):
+@router.message(StateFilter(RegisterState.regName), F.text.isalpha())
+async def register_name(message: Message, i18n: TranslatorRunner, state: FSMContext, bot: Bot):
     await state.update_data(regname=message.text)
 
     reg_data = await state.get_data()
     reg_call = reg_data.get('regcall')
     reg_name = reg_data.get('regname')
-    msg = f'👌 Вы ввели: \n ✅ Позывной: <b>{reg_call}</b> \n ✅ Ваше имя: <b>{reg_name}</b>'
-    await bot.send_message(message.from_user.id, msg)
+    await bot.send_message(message.from_user.id, i18n.regist.complit(reg_call=reg_call, reg_name=reg_name), reply_markup=interlinemenu(i18n))
     db = Database(os.getenv('DATABASE_NAME'))
     db.add_user(reg_call, reg_name, message.from_user.id)
-    db.add_table_user(reg_call)
-    await bot.send_message(message.from_user.id, '<b>Регистрация завершена успешно!</b> 👍 \n\n<i>Для продолжения работы выберите действие из главного меню</i>', reply_markup=main_kb)
-    # await asyncio.sleep(2)
-    # await bot.send_message(message.from_user.id, '\n\n<b>☰ Главное меню</b>', reply_markup=main_menu())
+    # db.add_table_user(reg_call)
     await state.clear()

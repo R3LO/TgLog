@@ -84,6 +84,11 @@ class Database():
         self.cursor.execute(f'INSERT INTO users (user_call,user_name, telegram_id) VALUES (?, ?, ?)', (user_call,user_name, telegram_id))
         self.connection.commit()
 
+    def edit_user(self, user_call, user_name) -> None:
+        self.cursor.execute(f"UPDATE users SET user_name = '{user_name}' WHERE user_call = '{user_call}'")
+        self.connection.commit()
+
+
     def add_table_user(self, user_call) -> None:
         '''
         Создание таблиц пользователя
@@ -122,6 +127,7 @@ class Database():
                      cqz INTEGER,
                      ituz INTEGER,
                      operator TEXT,
+                     paper_qsl TEXT DEFAULT N,
                      PRIMARY KEY(qso_date, time_on, band, mode, call));''')
 
             self.cursor.executescript(query)
@@ -168,7 +174,7 @@ class Database():
                     and {user_call}.call = t2.call
                     and {user_call}.band = t2.band
                     and {user_call}.mode = t2.mode
-                    and time({user_call}.time_on) between time(t2.time_on) and time(t2.time_on)
+                    and time({user_call}.time_on) between time(t2.time_on, '-30 minutes') and time(t2.time_on, '+30 minutes')
             WHERE {user_call}.call LIKE '%{data}%' OR grid LIKE '%{data}%'
             GROUP BY date({user_call}.qso_date), {user_call}.call, {user_call}.band, {user_call}.mode, grid, qsl
             ORDER BY date({user_call}.qso_date) DESC
@@ -229,7 +235,7 @@ class Database():
 
     def get_total_uniq_log(self, user_call):
         query_qsos = f'''
-                    SELECT call, qso_date, substr(time_on, 1, 4), band, mode from {user_call}
+                    SELECT call, qso_date, substr(time_on, 1, 5), band, mode from {user_call}
                     WHERE call IS NOT NULL and band = '13CM'
                     GROUP by call
                     ORDER BY call ASC;
@@ -240,7 +246,7 @@ class Database():
     def get_total_uniq_lotw(self, user_call):
         lotw = user_call + '_lotw'
         query_qsos = f'''
-                    SELECT call, qso_date, substr(time_on, 1, 4), band, mode from {lotw}
+                    SELECT call, qso_date, substr(time_on, 1, 5), band, mode from {lotw}
                     WHERE call IS NOT NULL and band = '13CM' and prop_mode = 'SAT' and sat_name = 'QO-100'
                     GROUP by call
                     ORDER BY call ASC;
@@ -301,7 +307,7 @@ class Database():
                     WHERE country in ('EUROPEAN RUSSIA', 'ASIATIC RUSSIA', 'KALININGRAD')
                     GROUP BY state
                     HAVING state <> ''
-                    ORDER BY state ASC;
+                    ORDER BY description ASC;
                     '''
         stat = self.cursor.execute(query_qsos)
         return stat.fetchall()
@@ -320,9 +326,23 @@ class Database():
         lotw = user_call + '_lotw'
         query = f'''
                     DELETE FROM {user_call};
-                    DELETE FROM {lotw};
+                    DELETE FROM {lotw} WHERE paper_qsl = 'N';
                 '''
+        self.cursor.executescript(query)
+        self.connection.commit()
 
+    def delete_main_log(self, user_call):
+        query = f'''
+                    DELETE FROM {user_call};
+                '''
+        self.cursor.executescript(query)
+        self.connection.commit()
+
+    def delete_lotw_log(self, user_call):
+        lotw = user_call + '_lotw'
+        query = f'''
+                    DELETE FROM {lotw} WHERE paper_qsl = 'N';
+                '''
         self.cursor.executescript(query)
         self.connection.commit()
 

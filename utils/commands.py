@@ -10,11 +10,7 @@ async def set_commands(bot: Bot):
         BotCommand(
           command='menu',
           description='Main menu / Главное меню'
-        ),
-        BotCommand(
-          command='cosmos',
-          description='Сформировать заявку на диплом Cosmos Russia'
         )
-        
+
     ]
     await bot.set_my_commands(commands, BotCommandScopeDefault())

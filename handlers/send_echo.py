@@ -3,10 +3,16 @@ from aiogram.types import Message
 from aiogram.types import ContentType
 from keyboards.inline_menu_kb import interlinemenu
 from utils.database import Database
+from fluentogram import TranslatorRunner
+from aiogram import Router
 
 import os
 
-async def send_echo(message: Message, bot: Bot):
+router = Router()
+
+@router.message()
+async def send_echo(message: Message, i18n: TranslatorRunner, bot: Bot):
+
     db = Database(os.getenv('DATABASE_NAME'))
     user = db.select_user_id(message.from_user.id)
     if message.content_type == 'text':
@@ -27,27 +33,31 @@ async def send_echo(message: Message, bot: Bot):
         else:
             await bot.send_message(message.from_user.id, f'⚠️ Начните рабюту с регистрации, кнопки МЕНЮ или с команды /start')
     else:
-        await bot.send_message(message.from_user.id, f'⁉️ Неправильная загрузка! Загружайте ADIF файлы через Основное меню 👇', reply_markup=interlinemenu())
+        await bot.send_message(message.from_user.id, f'⁉️ Неправильная загрузка! Загружайте ADIF файлы через Основное меню 👇', reply_markup=interlinemenu(i18n))
 
 
 async def res_db(user: str, message: Message, m: str, bot: Bot):
     db = Database(os.getenv('DATABASE_NAME'))
-    q = db.search_qso_data(user.upper(), m.upper())
-    # print(q)
-    if (len(q) != 0):
-        msg = ''
-        results = 0
-        for i in range(len(q)):
-            date, call, band, mode, loc, qsl = q[i][0], q[i][1], q[i][2], q[i][3], q[i][4], q[i][5]
-            date = date[8:10] + '-' + date[5:7] + '-' + date[0:4]
-            if loc is None or loc == '': loc = '-'
-            if qsl == 'N':
-                qsl = ''
-            else: qsl = ' [L]'
-            msg += f'➡️ <b>{call}</b> ◽️ {date} ◽️ {band} ◽️ {mode} ◽️ <b>{loc}</b> <b>{qsl}</b>\n'
-            results += 1
+    try:
+        q = db.search_qso_data(user.upper(), m.upper())
 
-        await bot.send_message(message.from_user.id, f'{user.upper()}: Поиск по запросу <b>{m.upper()}</b> 🔎 <b>{results}</b> QSO\n<i>Лимит не более 80 строк.</i>')
-        await bot.send_message(message.from_user.id, msg)
-    else:
+        if (len(q) != 0):
+            msg = ''
+            results = 0
+            for i in range(len(q)):
+                date, call, band, mode, loc, qsl = q[i][0], q[i][1], q[i][2], q[i][3], q[i][4], q[i][5]
+                date = date[8:10] + '-' + date[5:7] + '-' + date[0:4]
+                if loc is None or loc == '': loc = '-'
+                if qsl == 'N':
+                    qsl = ''
+                else: qsl = ' [L]'
+                # msg += f'➡️ <b>{call}</b> ◽️ {date} ◽️ {band} ◽️ {mode} ◽️ <b>{loc}</b> <b>{qsl}</b>\n'
+                msg += f'➡️ <b>{call}</b> ◽️ {date} ◽️ {mode} ◽️ <b>{loc}</b> <b>{qsl}</b>\n'
+                results += 1
+
+            await bot.send_message(message.from_user.id, f'{user.upper()}: Поиск по запросу <b>{m.upper()}</b> 🔎 <b>{results}</b> QSO\n<i>Лимит не более 80 строк.</i>')
+            await bot.send_message(message.from_user.id, msg)
+        else:
+            await bot.send_message(message.from_user.id, f'{user.upper()}: Поиск по логу <b>{m}</b> 🔎 ничего не найдено \nВсе что вводится в строке сообщение ищется в вашем загруженном логе по полю позывной и локатор. \nВозможно вы не загрузили лог или в вашем логе нет такого позывного или локатора. \nИли для запуска бота нужно выпонить команду /start \n')
+    except:
         await bot.send_message(message.from_user.id, f'{user.upper()}: Поиск по логу <b>{m}</b> 🔎 ничего не найдено \nВсе что вводится в строке сообщение ищется в вашем загруженном логе по полю позывной и локатор. \nВозможно вы не загрузили лог или в вашем логе нет такого позывного или локатора. \nИли для запуска бота нужно выпонить команду /start \n')

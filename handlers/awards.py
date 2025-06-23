@@ -82,7 +82,7 @@ async def main_menu_awards(callback: CallbackQuery, i18n: TranslatorRunner, bot:
         kb.button(text=f'🏆 W-QO100-B # {base_award_number[0]}', callback_data='dip_qo-100-base')
     # back
     kb.button(text=i18n.back(), callback_data='back_main_menu')
-    kb.adjust(1)
+    kb.adjust(2, 2, 2, 1)
     await bot.send_message(callback.from_user.id, i18n.awards.title(), reply_markup=kb.as_markup())
 
 # -------------------------------------------------------------------------------------

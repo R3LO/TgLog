@@ -21,49 +21,234 @@ router = Router()
 
 @router.callback_query(F.data == 'log_info')
 async def main_menu_log_info(callback: CallbackQuery, i18n: TranslatorRunner, bot: Bot):
+    await callback.message.delete()
+    kb = InlineKeyboardBuilder()
+    kb.button(text='🌐 DXCC', callback_data='dxcc')
+    kb.button(text='🗂 LOC', callback_data='loc')
+    kb.button(text='🪙 CQ', callback_data='cq')
+    kb.button(text='🪙 ITU', callback_data='itu')
+    kb.button(text='🇷🇺 RUSSIA', callback_data='russia')
+    kb.button(text='📗 Uniq Log', callback_data='ulog')
+    kb.button(text='📘 Uniq LoTW', callback_data='ulotw')
+    kb.button(text=i18n.back(), callback_data='back_main_menu')
+    kb.adjust(4, 3)
     db = Database(os.getenv('DATABASE_NAME'))
     user = db.select_user_id(callback.from_user.id)[1]
     try:
         total_qsos_log = db.get_total_qso_log(user)
-    except:
-        await bot.send_message(callback.from_user.id, f'⚠️ Логи либо не загружены, либо ошибка базы данных.')
-    print(total_qsos_log)
-#     total_qsos_lotw = db.get_total_qso_lotw(user)
-#     total_by_band = db.get_stat_bands(user)
-#     band_msg = '👀 <b>По диапазонам в основном логе:</b>\n'
-#     for i  in range(len(total_by_band)):
-#         band_msg += f'▫️ {total_by_band[i][0]} ▫️ {total_by_band[i][1]} ▫️ {total_by_band[i][2]} QSO\n'
-#     qsos = total_qsos_log[0][0]
-#     lotws = total_qsos_lotw[0][0]
-#     dxcc =  db.get_stat_states(user)
-#     qra =  db.get_stat_loc(user)
-#     cqz =  db.get_stat_cqz(user)
-#     ituz =  db.get_stat_ituz(user)
-#     uniq_log = db.get_total_uniq_log(user)
-#     uniq_lotw = db.get_total_uniq_lotw(user)
-#     # await callback.message.delete()
-#     await bot.send_message(callback.from_user.id,
-#                         f'📊 Статистика по логу <b>{user}</b>\n\n'
-#                         f'✅ Всего загружено в лог:  <b>{qsos}</b> QSO\n'
-#                         f'✅ Загружено LoTW:  <b>{lotws}</b> CFM\n\n'
-#                         f'✅ Уникальных позывных на 🛰 QO-100:\n'
-#                         f'▫️ по логу:  <b>{len(uniq_log)}</b> \n'
-#                         f'▫️ по LoTW:  <b>{len(uniq_lotw)}</b> \n\n'
-#                         f'{band_msg}'
-#                         f'\n\n🏆 <b>ПО ДИПЛОМАМ НА 🛰 QO-100</b>\n'
-#                         f'▫️LoTW DXCC:  {len(dxcc)} \n'
-#                         f'▫️LoTW QRA локаторов:  {len(qra)} \n'
-#                         f'▫️LoTW CQ зон:  {len(cqz)} \n'
-#                         f'▫️LoTW ITU зон:  {len(ituz)} \n'
-#                         f'\n\n💡 <i>Для допонительной информации можно выполнить команды:</i>\n'
-#                         f'/stat_states - список подтверденных DXCC стран из LoTW\n'
-#                         f'/stat_loc - спиок подтверденных локаторов из LoTW\n'
-#                         f'/stat_cqz - спиок подтверденных CQ зон из LoTW\n'
-#                         f'/stat_ituz - список подтверденных ITU зон из LoTW\n'
-#                         f'/stat_ru - CFM Российские регионы в LoTW\n'
-#                         f'/uniq_log - список уникальных позывных по логу\n'
-#                         f'/uniq_lotw - список уникальных позывных по LoTW\n'
+        total_qsos_lotw = db.get_total_qso_lotw(user)
+        qsos = total_qsos_log[0][0]
+        lotws = total_qsos_lotw[0][0]
+        dxcc =  db.get_stat_states(user)
+        qra =  db.get_stat_loc(user)
+        cqz =  db.get_stat_cqz(user)
+        ituz =  db.get_stat_ituz(user)
+        uniq_log = db.get_total_uniq_log(user)
+        uniq_lotw = db.get_total_uniq_lotw(user)
 
-#                         )
-# except:
-#     await bot.send_message(callback.from_user.id, f'⚠️ Логи либо не загружены, либо ошибка базы данных.')
+        total_by_band = db.get_stat_bands(user)
+        band_msg = '\n' + i18n.log.mode() + '\n'
+        for i  in range(len(total_by_band)):
+            band_msg += f'▫️ {total_by_band[i][0]} ▫️ {total_by_band[i][1]} ▫️ {total_by_band[i][2]} QSO\n'
+
+        await bot.send_message(callback.from_user.id,
+                    i18n.log.title(user=user) + '\n' +
+                    f'{band_msg}\n' +
+                    i18n.log.info1(qso=qsos, uqso=len(uniq_log)) + '\n\n' +
+                    i18n.log.info2(lotws=lotws, uniq_lotw=len(uniq_lotw), percent= "{:,.2f}".format(lotws / qsos * 100)) + '\n\n' +
+                    i18n.log.info3() + '\n' +
+                    f'▫️LoTW DXCC:  <b>{len(dxcc)}</b> \n'
+                    f'▫️LoTW QRA locators:  <b>{len(qra)}</b> \n'
+                    f'▫️LoTW CQ zone:  <b>{len(cqz)}</b> \n'
+                    f'▫️LoTW ITU zone:  <b>{len(ituz)}</b> \n'
+                    # f'\n\n💡 <i>Для допонительной информации можно выполнить команды:</i>\n'
+                    # f'/dxcc - список подтверденных DXCC стран из LoTW\n'
+                    # f'/stat_loc - спиок подтверденных локаторов из LoTW\n'
+                    # f'/stat_cqz - спиок подтверденных CQ зон из LoTW\n'
+                    # f'/stat_ituz - список подтверденных ITU зон из LoTW\n'
+                    # f'/stat_ru - CFM Российские регионы в LoTW\n'
+                    # f'/uniq_log - список уникальных позывных по логу\n'
+                    # f'/uniq_lotw - список уникальных позывных по LoTW\n'
+                    , reply_markup=kb.as_markup()
+                    )
+
+    except:
+        await bot.send_message(callback.from_user.id, f'⚠️ Основной лог не загружен.', reply_markup=kb.as_markup())
+
+
+@router.callback_query(F.data == 'dxcc')
+async def get_dxcc(callback: CallbackQuery, i18n: TranslatorRunner, bot: Bot):
+    await callback.message.delete()
+    db = Database(os.getenv('DATABASE_NAME'))
+    user = db.select_user_id(callback.from_user.id)[1]
+    kb = InlineKeyboardBuilder()
+    kb.button(text=i18n.back(), callback_data='log_info')
+    try:
+        stat_dxcc = db.get_stat_states(user)
+        if len(stat_dxcc) != 0:
+            msg = f'🏆 <b>{user}</b>: DXCC LoTW CFM 🛰 QO-100\n\n# ▫️ COUNTRY ▫️ CALLSIGN\n'
+            for i in range(len(stat_dxcc)):
+                msg += f'{i+1} ▫️ {stat_dxcc[i][0]}  ▫️  {stat_dxcc[i][1]}\n'
+            await bot.send_message(callback.from_user.id,
+                                f'{msg}\n ⭐️ Total DXCC: <b>{i+1}</b>'
+                                , reply_markup=kb.as_markup()
+                                )
+        else:
+            await bot.send_message(callback.from_user.id, f'⚠️ Загрузите LoTW файл', reply_markup=kb.as_markup())
+    except:
+        await bot.send_message(callback.from_user.id, f'⚠️ Загрузите LoTW файл', reply_markup=kb.as_markup())
+
+@router.callback_query(F.data == 'loc')
+async def get_loc(callback: CallbackQuery, i18n: TranslatorRunner, bot: Bot):
+    await callback.message.delete()
+    db = Database(os.getenv('DATABASE_NAME'))
+    user = db.select_user_id(callback.from_user.id)[1]
+    kb = InlineKeyboardBuilder()
+    kb.button(text=i18n.back(), callback_data='log_info')
+    try:
+        stat_loc = db.get_stat_loc(user)
+        if len(stat_loc) != 0:
+            file = 'logs/' + user + '_QRA.txt'
+            upload_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), file)
+            txt = f'---=== {user}: ' + i18n.log.loc() + ' ===---\n\n'
+            for i in range(len(stat_loc)):
+                txt += f'{i+1}: {stat_loc[i][0]}  {stat_loc[i][1]}\n'
+            with open(upload_path, 'w', encoding='utf-8') as f:
+                f.write(txt)
+            await bot.send_message(callback.from_user.id, text=i18n.loc.file())
+            document = FSInputFile(upload_path)
+            await bot.send_document(callback.from_user.id, document)
+            await bot.send_message(callback.from_user.id,
+                                f'⭐️ Total QRA loc: {len(stat_loc)}'
+                                , reply_markup=kb.as_markup()
+                                )
+        else:
+            await bot.send_message(callback.from_user.id, f'⚠️ Загрузите LoTW файл', reply_markup=kb.as_markup())
+    except:
+        await bot.send_message(callback.from_user.id, f'⚠️ Загрузите LoTW файл', reply_markup=kb.as_markup())
+
+@router.callback_query(F.data == 'cq')
+async def get_cq(callback: CallbackQuery, i18n: TranslatorRunner, bot: Bot):
+    db = Database(os.getenv('DATABASE_NAME'))
+    user = db.select_user_id(callback.from_user.id)[1]
+    kb = InlineKeyboardBuilder()
+    kb.button(text=i18n.back(), callback_data='log_info')
+    try:
+        stat_cqz = db.get_stat_cqz(user)
+        if len(stat_cqz) != 0:
+            msg = f'🏆 <b>CQ Zones LoTW CFM for {user} 🛰 QO-100</b>\n\nCQ ZONE ▫️ CALLSIGN\n'
+            for i in range(len(stat_cqz)):
+                msg += f'{stat_cqz[i][0]}   {stat_cqz[i][1]}\n'
+            await bot.send_message(callback.from_user.id,
+                                f'{msg}\n⭐️ Total CQ zones: <b>{i+1}</b>'
+                                , reply_markup=kb.as_markup()
+                                )
+        else:
+            await bot.send_message(callback.from_user.id, f'⚠️ Загрузите LoTW файл', reply_markup=kb.as_markup())
+    except:
+        await bot.send_message(callback.from_user.id, f'⚠️ Загрузите LoTW файл', reply_markup=kb.as_markup())
+
+@router.callback_query(F.data == 'itu')
+async def get_cq(callback: CallbackQuery, i18n: TranslatorRunner, bot: Bot):
+    db = Database(os.getenv('DATABASE_NAME'))
+    user = db.select_user_id(callback.from_user.id)[1]
+    kb = InlineKeyboardBuilder()
+    kb.button(text=i18n.back(), callback_data='log_info')
+    try:
+        stat_ituz = db.get_stat_ituz(user)
+        if len(stat_ituz) != 0:
+            msg = f'🏆 <b>ITU Zones LoTW CFM for {user}🛰 QO-100</b>\n\nITU ZONE ▫️ CALLSIGN\n'
+            for i in range(len(stat_ituz)):
+                msg += f'{stat_ituz[i][0]}   {stat_ituz[i][1]}\n'
+            await bot.send_message(callback.from_user.id,
+                                f'{msg}\n⭐️ Total ITU zones: <b>{i+1}</b>'
+                                , reply_markup=kb.as_markup()
+                                )
+        else:
+            await bot.send_message(callback.from_user.id, f'⚠️ Загрузите LoTW файл', reply_markup=kb.as_markup())
+    except:
+        await bot.send_message(callback.from_user.id, f'⚠️ Загрузите LoTW файл', reply_markup=kb.as_markup())
+
+
+@router.callback_query(F.data == 'russia')
+async def get_russia(callback: CallbackQuery, i18n: TranslatorRunner, bot: Bot):
+    db = Database(os.getenv('DATABASE_NAME'))
+    user = db.select_user_id(callback.from_user.id)[1]
+    kb = InlineKeyboardBuilder()
+    kb.button(text=i18n.back(), callback_data='log_info')
+    try:
+        stat_ru = db.get_stat_ru(user)
+        if len(stat_ru) != 0:
+            msg = f'🏆 <b>Регионы России LoTW CFM {user} 🛰 QO-100</b>\n\nРегион России ▫️ Позывной CFM\n'
+            for i in range(len(stat_ru)):
+                msg += f'{i+1}:  {stat_ru[i][0]}  ▫️  {stat_ru[i][1]}\n'
+            await bot.send_message(callback.from_user.id,
+                                f'{msg}\n⭐️ Российских регионов: <b>{i+1}</b>'
+                                , reply_markup=kb.as_markup()
+                                )
+        else:
+            await bot.send_message(callback.from_user.id, f'⚠️ Загрузите LoTW файл', reply_markup=kb.as_markup())
+    except:
+        await bot.send_message(callback.from_user.id, f'⚠️ Загрузите LoTW файл', reply_markup=kb.as_markup())
+
+
+@router.callback_query(F.data == 'ulog')
+async def get_russia(callback: CallbackQuery, i18n: TranslatorRunner, bot: Bot):
+    db = Database(os.getenv('DATABASE_NAME'))
+    user = db.select_user_id(callback.from_user.id)[1]
+    kb = InlineKeyboardBuilder()
+    kb.button(text=i18n.back(), callback_data='log_info')
+    try:
+        uniq_log = db.get_total_uniq_log(user)
+        if len(uniq_log) != 0:
+            file = 'logs/' + user + '_uniq_log.txt'
+            upload_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), file)
+            txt = f'---=== {user}: Список уникальных позывных из вашего лога ===---\n\n'
+            for i in range(len(uniq_log)):
+                txt += f'{i+1}:  {uniq_log[i][0]}  {uniq_log[i][1]}  {uniq_log[i][2]}   {uniq_log[i][3]}  {uniq_log[i][4]}\n'
+            with open(upload_path, 'w', encoding='utf-8') as f:
+                f.write(txt)
+            await bot.send_message(callback.from_user.id, text=
+                                f'💾 Файл со списом уникальных позывных ниже 👇 \n\n'
+                                )
+            document = FSInputFile(upload_path)
+            await bot.send_document(callback.from_user.id, document)
+            await bot.send_message(callback.from_user.id,
+                                f'⭐️ Total unique callsigns: <b>{len(uniq_log)}</b>'
+                                , reply_markup=kb.as_markup()
+                                )
+        else:
+            await bot.send_message(callback.from_user.id, f'⚠️ Загрузите основной лог', reply_markup=kb.as_markup())
+    except:
+        await bot.send_message(callback.from_user.id, f'⚠️ Загрузите основной лог', reply_markup=kb.as_markup())
+
+
+@router.callback_query(F.data == 'ulotw')
+async def get_russia(callback: CallbackQuery, i18n: TranslatorRunner, bot: Bot):
+    db = Database(os.getenv('DATABASE_NAME'))
+    user = db.select_user_id(callback.from_user.id)[1]
+    kb = InlineKeyboardBuilder()
+    kb.button(text=i18n.back(), callback_data='log_info')
+    try:
+        uniq_lotw = db.get_total_uniq_lotw(user)
+        if len(uniq_lotw) != 0:
+            file = 'logs/' + user + '_uniq_lotw.txt'
+            upload_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), file)
+            txt = f'---=== {user}: Список уникальных позывных из LoTW ===---\n\n'
+            for i in range(len(uniq_lotw)):
+                txt += f'{i+1}:  {uniq_lotw[i][0]}  {uniq_lotw[i][1]}  {uniq_lotw[i][2]}   {uniq_lotw[i][3]}  {uniq_lotw[i][4]}\n'
+            with open(upload_path, 'w', encoding='utf-8') as f:
+                f.write(txt)
+            await bot.send_message(callback.from_user.id, text=
+                                f'💾 Файл со списом уникальных позывных ниже 👇 \n\n'
+                                )
+            document = FSInputFile(upload_path)
+            await bot.send_document(callback.from_user.id, document)
+            await bot.send_message(callback.from_user.id,
+                                f'⭐️ Total unique LoTW callsigns: <b>{len(uniq_lotw)}</b>'
+                                , reply_markup=kb.as_markup()
+                                )
+        else:
+            await bot.send_message(callback.from_user.id, f'⚠️ Загрузите LoTW файл', reply_markup=kb.as_markup())
+    except:
+        await bot.send_message(callback.from_user.id, f'⚠️ Загрузите LoTW файл', reply_markup=kb.as_markup())

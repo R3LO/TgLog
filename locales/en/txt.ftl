@@ -140,7 +140,11 @@ log-info3 = ✅ <b>For Awards on 🛰 QO-100</b>
 
 log-loc = confirmed QRA locators from LoTW
 
+log-dxcc = confirmed DXCC from LoTW
+
 loc-file = 💾 TXT-file with the list of confirmed locations is below 👇
+
+dxcc-file = 💾 TXT-file with the CFM DXCC list is below 👇
 
 uniquelog-file = 💾 TXT-file with the list of unique callsign of your log is below 👇
 

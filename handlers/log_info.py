@@ -78,11 +78,27 @@ async def get_dxcc(callback: CallbackQuery, i18n: TranslatorRunner, bot: Bot):
     try:
         stat_dxcc = db.get_stat_states(user)
         if len(stat_dxcc) != 0:
-            msg = f'🏆 <b>{user}</b>: DXCC LoTW CFM 🛰 QO-100\n\n# ▫️ COUNTRY ▫️ CALLSIGN\n'
-            for i in range(len(stat_dxcc)):
-                msg += f'{i+1} ▫️ {stat_dxcc[i][0]}  ▫️  {stat_dxcc[i][1]}\n'
-            await bot.send_message(callback.from_user.id,
-                                f'{msg}\n ⭐️ Total DXCC: <b>{i+1}</b>'
+            if len(stat_dxcc) < 130:
+                msg = f'🏆 <b>{user}</b>: DXCC LoTW CFM 🛰 QO-100\n\n# ▫️ COUNTRY ▫️ CALLSIGN\n'
+                for i in range(len(stat_dxcc)):
+                    msg += f'{i+1} ▫️ {stat_dxcc[i][0]}  ▫️  {stat_dxcc[i][1]}\n'
+                await bot.send_message(callback.from_user.id,
+                                    f'{msg}\n ⭐️ Total DXCC: <b>{i+1}</b>'
+                                    , reply_markup=kb.as_markup()
+                                    )
+            elif len(stat_dxcc) >= 130:
+                file = 'logs/' + user + '_DXCC.txt'
+                upload_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), file)
+                txt = f'---=== {user}: ' + i18n.log.dxcc() + ' ===---\n\n'
+                for i in range(len(stat_dxcc)):
+                    txt += f'{i+1}: {stat_dxcc[i][0]}  {stat_dxcc[i][1]}\n'
+                with open(upload_path, 'w', encoding='utf-8') as f:
+                    f.write(txt)
+                await bot.send_message(callback.from_user.id, text=i18n.dxcc.file())
+                document = FSInputFile(upload_path)
+                await bot.send_document(callback.from_user.id, document)
+                await bot.send_message(callback.from_user.id,
+                                f'⭐️ Total CFM DXCC: {len(stat_dxcc)}'
                                 , reply_markup=kb.as_markup()
                                 )
         else:
@@ -166,6 +182,7 @@ async def get_cq(callback: CallbackQuery, i18n: TranslatorRunner, bot: Bot):
 async def get_russia(callback: CallbackQuery, i18n: TranslatorRunner, bot: Bot):
     db = Database(os.getenv('DATABASE_NAME'))
     user = db.select_user_id(callback.from_user.id)[1]
+    # user = 'VU2DPN'
     kb = InlineKeyboardBuilder()
     kb.button(text=i18n.back(), callback_data='log_info')
     try:

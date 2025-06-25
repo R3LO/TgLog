@@ -306,6 +306,14 @@ back = ⬅️ back
 
 i18n-lang = en
 
+search-result = Search for <b>{$m}</b> 🔎 <b>{$results}</b> QSO
+    <i>Limit 80 lines.</i>
+
+search-no-result = Log search <b>{$m}</b> 🔎 nothing found
+
+wwrong = ⁉️ Incorrect loading!
+    You must upload files via the Main menu 👇
+
 # -------------------------------------- Menu Profile --------------------------------------
 
 profile-change-name = ✏️ Change name

@@ -48,7 +48,7 @@ async def main_menu_profile(callback: CallbackQuery, i18n: TranslatorRunner, sta
         unique_award_number = i18n.profile.status.diploma()
     else:
         unique_award_number = ' #' + str(unique_award_number)
-    base_award_number =db.check_call_diplomas(user[0], 'w1000b')[0]
+    base_award_number =db.check_call_diplomas(user[1], 'w1000b')[0]
     if (base_award_number == 0):
         base_award_number = i18n.profile.status.diploma()
     else:

@@ -29,14 +29,14 @@ async def send_echo(message: Message, i18n: TranslatorRunner, bot: Bot):
                     await res_db(user[1].upper(), message, call, bot)
             if ('🌍' not in message.text and 'FT4' not in message.text and 'FT8' not in message.text and 'DIGI' not in message.text and 'CW' not in message.text and 'SSB' not in message.text):
                 call = message.text
-                await res_db(user[1].upper(), message, call, bot)
+                await res_db(user[1].upper(), message, call, i18n, bot)
         else:
-            await bot.send_message(message.from_user.id, f'⚠️ Начните рабюту с регистрации, кнопки МЕНЮ или с команды /start')
+            await bot.send_message(message.from_user.id, f'⚠️ Run /start')
     else:
-        await bot.send_message(message.from_user.id, f'⁉️ Неправильная загрузка! Загружайте ADIF файлы через Основное меню 👇', reply_markup=interlinemenu(i18n))
+        await bot.send_message(message.from_user.id, i18n.wwrong(), reply_markup=interlinemenu(i18n))
 
 
-async def res_db(user: str, message: Message, m: str, bot: Bot):
+async def res_db(user: str, message: Message, m: str, i18n: TranslatorRunner, bot: Bot):
     db = Database(os.getenv('DATABASE_NAME'))
     try:
         q = db.search_qso_data(user.upper(), m.upper())
@@ -55,9 +55,9 @@ async def res_db(user: str, message: Message, m: str, bot: Bot):
                 msg += f'➡️ <b>{call}</b> ◽️ {date} ◽️ {mode} ◽️ <b>{loc}</b> <b>{qsl}</b>\n'
                 results += 1
 
-            await bot.send_message(message.from_user.id, f'{user.upper()}: Поиск по запросу <b>{m.upper()}</b> 🔎 <b>{results}</b> QSO\n<i>Лимит не более 80 строк.</i>')
+            await bot.send_message(message.from_user.id, f'{user.upper()}: ' + i18n.search.result(m=m.upper(), results=results))
             await bot.send_message(message.from_user.id, msg)
         else:
-            await bot.send_message(message.from_user.id, f'{user.upper()}: Поиск по логу <b>{m}</b> 🔎 ничего не найдено \nВсе что вводится в строке сообщение ищется в вашем загруженном логе по полю позывной и локатор. \nВозможно вы не загрузили лог или в вашем логе нет такого позывного или локатора. \nИли для запуска бота нужно выпонить команду /start \n')
+            await bot.send_message(message.from_user.id, f'{user.upper()}: ' + i18n.search.no.result(m=m))
     except:
-        await bot.send_message(message.from_user.id, f'{user.upper()}: Поиск по логу <b>{m}</b> 🔎 ничего не найдено \nВсе что вводится в строке сообщение ищется в вашем загруженном логе по полю позывной и локатор. \nВозможно вы не загрузили лог или в вашем логе нет такого позывного или локатора. \nИли для запуска бота нужно выпонить команду /start \n')
+        await bot.send_message(message.from_user.id, f'{user.upper()}: '  + i18n.search.no.result(m=m))

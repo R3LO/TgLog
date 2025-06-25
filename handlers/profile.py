@@ -25,19 +25,40 @@ async def main_menu_profile(callback: CallbackQuery, i18n: TranslatorRunner, sta
     db = Database(os.getenv('DATABASE_NAME'))
     user = db.select_user_id(callback.from_user.id)
     kb = InlineKeyboardBuilder()
-    kb.button(text='✏️ Редактировать имя', callback_data='edit_name')
+    kb.button(text=i18n.profile.change.name(), callback_data='edit_name')
     kb.button(text=i18n.back(), callback_data='back_main_menu')
     kb.adjust(2)
-    await bot.send_message(callback.from_user.id,
-                           f'💼 <b>Ваши данные</b>\n\n'
-                           f'📡 Позывной: <b>{user[1]}</b>\n'
-                           f'👤 Имя и Фамилия: <b>{user[2]}</b>\n\n'
-                           f'💡 <i>Позывной, имя и фамилия указываются на выдаваемых дипломах. Изменить можно только имя, для смены позывного обратитесь к администратору.</i>\n\n'
+    rus_award_number = db.check_call_diplomas(user[1], 'w25r')[0]
+    if (rus_award_number == 0):
+        rus_award_number = i18n.profile.status.diploma()
+    else:
+        rus_award_number = ' #' + str(rus_award_number)
+    states_award_number = db.check_call_diplomas(user[1], 'w100c')[0]
+    if (states_award_number == 0):
+        states_award_number = i18n.profile.status.diploma()
+    else:
+        states_award_number = ' #' + str(states_award_number)
+    locs_award_number =db.check_call_diplomas(user[1], 'w100l')[0]
+    if (locs_award_number == 0):
+        locs_award_number = i18n.profile.status.diploma()
+    else:
+        locs_award_number = ' #' + str(locs_award_number)
+    unique_award_number =db.check_call_diplomas(user[1], 'w1000u')[0]
+    if (unique_award_number == 0):
+        unique_award_number = i18n.profile.status.diploma()
+    else:
+        unique_award_number = ' #' + str(unique_award_number)
+    base_award_number =db.check_call_diplomas(user[0], 'w1000b')[0]
+    if (base_award_number == 0):
+        base_award_number = i18n.profile.status.diploma()
+    else:
+        base_award_number = ' #' + str(base_award_number)
+    await bot.send_message(callback.from_user.id, i18n.profile.data(user1=user[1], user2=user[2], rus_award_number=rus_award_number, states_award_number=states_award_number, locs_award_number=locs_award_number, unique_award_number=unique_award_number, base_award_number=base_award_number)
                            , reply_markup=kb.as_markup())
 
 @router.callback_query(F.data == 'edit_name')
 async def main_menu_profile(callback: CallbackQuery, i18n: TranslatorRunner, state: FSMContext, bot: Bot):
-    await bot.send_message(callback.from_user.id, 'Введие ваше имя и фамилию')
+    await bot.send_message(callback.from_user.id, i18n.profile.name())
     await state.set_state(ProfileEditState.editName)
 
 @router.message(StateFilter(ProfileEditState.editName), F.text.isalpha())
@@ -47,10 +68,12 @@ async def edit_name(message: Message, i18n: TranslatorRunner, state: FSMContext,
     await state.update_data(name=message.text)
     data = await state.get_data()
     name = data['name']
-    await bot.send_message(message.from_user.id, f'fff {user} {name}')
+    kb = InlineKeyboardBuilder()
+    kb.button(text=i18n.back(), callback_data='profile')
+    await bot.send_message(message.from_user.id, i18n.profile.change(user=user, name=name), reply_markup=kb.as_markup())
     db.edit_user(user, name)
     await state.clear()
 
 @router.message(StateFilter(ProfileEditState.editName))
 async def edit_name(message: Message, i18n: TranslatorRunner, state: FSMContext, bot: Bot):
-    await bot.send_message(message.from_user.id, f'Это не имя')
+    await bot.send_message(message.from_user.id, i18n.profile.no.name())

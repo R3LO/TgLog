@@ -16,10 +16,10 @@ def interlinemenu(i18n: TranslatorRunner):
     kb.button(text=i18n.worked.statistics(), callback_data='log_info')
     kb.button(text=i18n.profile(), callback_data='profile')
 
-    kb.button(text='🛠 Утилиты', callback_data='menu_utilites')
+    kb.button(text=i18n.utilites.tittle(), callback_data='menu_utilites')
     kb.button(text=i18n.wipe.log(), callback_data='wipe_log')
 
-    kb.button(text='💡 Помощь', callback_data='menu_help')
+    kb.button(text=i18n.menu.help(), callback_data='menu_help')
     # kb.button(text=i18n.convert.log(), callback_data='conv_log')
 
 

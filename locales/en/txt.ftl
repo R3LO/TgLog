@@ -49,9 +49,9 @@ regist-complit =
 
 main-menu = ☰ Main menu
 
-upload-log = ↗️ Upload Log
+upload-log = ↗️ Upload
 
-download-log = ↘️ Download Log
+download-log = ↘️ Download
 
 convert-log = 📙 Convert any ADIF log
 
@@ -142,6 +142,20 @@ log-loc = confirmed QRA locators from LoTW
 
 loc-file = 💾 TXT-file with the list of confirmed locations is below 👇
 
+uniquelog-file = 💾 TXT-file with the list of unique callsign of your log is below 👇
+
+uniquelotw-file = 💾 TXT-file with the list of unique callsign according to LoTW is below 👇
+
+log-need-log = ⚠️ Needs upload main log
+
+log-need-lotw = ⚠️ Need upload LoTW file
+
+log-rus = 🏆 <b>Russian regions LoTW CFM for {$user} 🛰 QO-100</b>
+
+    Russian region ▫️ Callsign
+
+log-rus-total = Russian regions:
+
 # -------------------------------------- Wipe Log --------------------------------------
 
 wipe-title =
@@ -204,10 +218,12 @@ convert-ready = 💾 The ADIF file has been converted 👇
 
 # -------------------------------------- Menu Upload --------------------------------
 
-upload-title = ⭐️ Uploaded files must be no more than <b>10MB</b> at a time.
-    ⭐️ The format of the uploaded files <b>is ADIF</b>.
-    ⭐️ Dupe entries are not included in the log.
-    ⭐️ Entries are uploader only for band <b>13CM</b>.
+upload-title =
+    ◾️ Upload main log in ADIF format
+    ◾️ Synchronize your log with LoTW
+    ◾️ To confirm a country or region of Russia for our diplomas you can upload a photo of a paper QSL
+
+upload-paper-qsl = 🪪 Upload a paper QSL
 
 upload-main-log = 📘 Main log
 
@@ -223,9 +239,9 @@ upload-file = ⭐️ <i><b>The file's ADIF must contain tags:</b></i>
 
 upload-bigfile = ⛔️ The file size is too large.
 
-upload-cancel = ⛔️ Downloading has been canceled.
+upload-cancel = ⛔️ Action cancelled.
 
-upload-ok = 💡 The main log is uploaded.
+upload-ok = 💡 The file is uploaded.
 
 upload-wrong = ❌ Wrong ADIF file.
 
@@ -236,6 +252,31 @@ upload-errors = ❌ <b>Errors occurred when processing the file.</b>
     💾 <i>QSOs that was not included in the database is in the attached file below 👇 </i>
 
 upload-db = ✅ <b>{$n}</b> QSOs for the 13CM band have been added to the database.
+
+upload-lotw =
+    ◾️ To prevent login and password leaks, we do not request LoTW service data.
+    Download the <b>lotwreport.adi</b> file from your personal LoTW account.
+    1️⃣ Log in to your LoTW account
+    2️⃣ Go to <b>Your QSOs</b>
+    3️⃣ Go to <b>Download Report</b>
+    4️⃣ Check the boxes <b>Include QSL details</b> and <b>Include QSO station details</b>
+    5️⃣ Select the call sign below
+    6️⃣ Click <b>Download Report</b> and save the file <b>lotwreport.adi</b> to your disk
+    7️⃣ Upload the downloaded file by clicking on 📎
+
+    ⚠️ <i>To cancel the download, send /cancel</i>
+
+upload-paperqsl-title =
+    ◾️You can upload a paper QSL to confirm the country or region of Russia in our diploma program.
+
+    Send each message one side of a paper QSL. After checking your QSL, the country or region of Russia will be included in the QO-100-RUSSIA diploma program.
+
+    ⚠️ <i>To cancel the download, send /cancel</i>
+
+upload-paper-qsl2 = ❓ Send another photo of QSL?
+
+upload-paper-ok = 👍 The message has been sent
+
 
 # -------------------------------------- Menu Download --------------------------------
 
@@ -255,9 +296,58 @@ download-file2 = 📌 <b>{$user}</b> in the log <b>{$qsos}</b> QSO.
 
 download-nothing = ❌ Nothing to download!
 
+# -------------------------------------- Menu Help --------------------------------------
+
+menu-help =💡 Help
+
 # -------------------------------------- Other --------------------------------------
 
 back = ⬅️ back
+
+i18n-lang = en
+
+# -------------------------------------- Menu Profile --------------------------------------
+
+profile-change-name = ✏️ Change name
+
+profile-status-diploma = not received
+
+profile-data =
+    💼 <b>Your profile</b>
+
+    📡 Call sign: <b>{$user1}</b>
+    👤 First and Last Name: <b>{$user2}</b>
+
+    🏆 <b>Issued diplomas</b>
+    <b>W-QO-100-RUSSIA</b>  {$rus_award_number}
+    <b>W-QO-100-Countries</b>  {$states_award_number}
+    <b>W-QO-100-Locators</b>  {$locs_award_number}
+    <b>W-QO-100-Uniques</b>  {$unique_award_number}
+    <b>W-QO-100-Base</b>  {$base_award_number}
+
+    💡 <i>Your call sign, first name and last name are nammed on the issued diplomas. You can only change the name. To change the call sign, contact the administrator.</i>
+
+profile-name = 💁‍♂️ Send your first and last name
+
+profile-change =
+    💁‍♂️ Your data has been changed:
+
+    Call sign <b>{$user}</b>
+    Name <b>{$name}</b>
+
+profile-no-name = Wrong name is entered!
+
+# -------------------------------------- Menu Utilites --------------------------------------
+
+utilites-tittle = 🛠 Utilites
+
+utilites-cosmos = 🧑‍🚀 Application for Cosmos
+
+utilites-cosmos-ok =
+    📌 <b>{$user}</b> there are unique call signs in the Cosmos diploma application <b>{$cosmos_log}</b>.
+
+    💾 Cosmos Diploma application file
+
 
 # -------------------------------------- Menu Help --------------------------------------
 
@@ -279,6 +369,7 @@ help-text =
     🔸 <b>Loading the main log and sync LoTW</b>
     - Create an ADIF file and upload it to the main log.
     - To synchronize with LoTW, download the full lotwreport.adi file and upload it
+    - You can send a paper QSL to confirm the country or region of Russia, which is not confirmed in LoTW. After checking your paper QSL, this QSL will be apply to the QO-100-RUSSIA diploma program.
 
     🔸 <b>User rating</b>
     - Provides a rating of TLog users in various categories

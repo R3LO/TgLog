@@ -299,11 +299,24 @@ class Database():
         stat = self.cursor.execute(query_qsos)
         return stat.fetchall()
 
-    def get_stat_ru(self, user_call):
+    def get_stat_ruru(self, user_call):
         lotw = user_call + '_lotw'
         query_qsos = f'''
                     SELECT rr.description, call from {lotw}
-                    LEFT JOIN rda_reg rr ON {lotw}.state = rr.rda
+                    LEFT JOIN rda_reg_ru rr ON {lotw}.state = rr.rda
+                    WHERE country in ('EUROPEAN RUSSIA', 'ASIATIC RUSSIA', 'KALININGRAD')
+                    GROUP BY state
+                    HAVING state <> ''
+                    ORDER BY description ASC;
+                    '''
+        stat = self.cursor.execute(query_qsos)
+        return stat.fetchall()
+
+    def get_stat_ruen(self, user_call):
+        lotw = user_call + '_lotw'
+        query_qsos = f'''
+                    SELECT rr.description, call from {lotw}
+                    LEFT JOIN rda_reg_en rr ON {lotw}.state = rr.rda
                     WHERE country in ('EUROPEAN RUSSIA', 'ASIATIC RUSSIA', 'KALININGRAD')
                     GROUP BY state
                     HAVING state <> ''

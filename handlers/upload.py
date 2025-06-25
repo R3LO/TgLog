@@ -1,5 +1,5 @@
 # -*- coding: UTF-8 -*-
-from aiogram import Bot
+from aiogram import Bot, types
 from aiogram.types import Message
 from aiogram import F
 from aiogram import Router
@@ -14,6 +14,7 @@ from aiogram.utils.keyboard import InlineKeyboardBuilder
 from state.uload_log import Upload_logState
 from state.upload_lotw import Upload_lotwState
 from aiogram.types import FSInputFile
+from state.register import PaperQSLState
 from aiogram.fsm.state import default_state
 from handlers.create_pdf import create_w100c_pdf, create_w100l_pdf, create_w1000b_pdf, create_w1000u_pdf, create_w25r_pdf
 import sqlite3
@@ -29,6 +30,7 @@ async def main_menu_upload(callback: CallbackQuery, i18n: TranslatorRunner, bot:
     kb = InlineKeyboardBuilder()
     kb.button(text=i18n.upload.main.log(), callback_data='main_log'),
     kb.button(text=i18n.upload.lotw.sync(), callback_data='lotw_log')
+    kb.button(text=i18n.upload.paper.qsl(), callback_data='paper_qsl')
     kb.button(text=i18n.back(), callback_data='back_main_menu')
     kb.adjust(2, 1)
     await bot.send_message(callback.from_user.id, i18n.upload.title(), reply_markup=kb.as_markup())
@@ -58,10 +60,12 @@ async def upload_adif(message: Message, i18n: TranslatorRunner, state: FSMContex
         await state.clear()
         await bot.send_message(message.from_user.id, i18n.upload.ok())
         await bot.send_message(message.from_user.id, i18n.main.menu(), reply_markup=interlinemenu(i18n))
-        await state.clear()
     else:
         await state.clear()
-        await message.reply(i18n.upload.cancel())
+        kb = InlineKeyboardBuilder()
+        kb.button(text=i18n.back(), callback_data='back_main_menu')
+        kb.adjust(1)
+        await message.reply(i18n.upload.cancel(), reply_markup=kb.as_markup())
 
 async def adif(file_log: str, message: Message, i18n: TranslatorRunner, bot: Bot):
     '''
@@ -125,24 +129,14 @@ async def adif(file_log: str, message: Message, i18n: TranslatorRunner, bot: Bot
         await bot.send_message(message.from_user.id, i18n.upload.wrong())
         return
 
-
+# ------------------------------------------------------------------------------
 @router.callback_query(F.data == 'lotw_log')
 async def lotw_log_upload(callback: CallbackQuery, i18n: TranslatorRunner, state: FSMContext, bot: Bot):
     '''
     Кнопка Синхронизация с LoTW
     '''
     await callback.message.delete()
-    await callback.message.answer(f'<b>Выбрано</b>: Снхронизация лога с файлом из LoTW')
-    await bot.send_message(callback.from_user.id,
-                            f'⭐️ Для предотвращения \"утечек\" логина и пароля мы не запрашиваем данные сервиса LoTW, как это делают другие сервисы. Необходимый файл <b>lotwreport.adi</b> необходимо самостоятельно скачать из своей личной учетной записи LoTW. Скачанный <b>lotwreport.adi</b> файл должен быть не более <b>10Мб</b>. \n\n'
-                            f'1️⃣ Войдите в свою учетную запись LoTW \n'
-                            f'2️⃣ Перейдите в <b>Your QSOs</b> \n'
-                            f'3️⃣ Перейдите в <b>Download Report</b> \n'
-                            f'4️⃣ Поставьте галочки <b>Include QSL details</b> и вторая галочка на <b>Include QSO station details (\"my\" station location fields)</b> \n'
-                            f'5️⃣ Ниже выбирите позывной \n'
-                            f'6️⃣ Нажмите <b>Download Report</b> и сохрание файл себе на диск \n'
-                            f'7️⃣ Загрузите скачанный файл сообщением нажав на 📎 \n\n'
-                            f'<i>Для отмены загрузки отправьте текстовым сообшнием слово <b>Отмена</b></i>')
+    await bot.send_message(callback.from_user.id, i18n.upload.lotw())
     await state.clear()
     await state.set_state(Upload_lotwState.upload_adif_lotw)
 
@@ -160,19 +154,22 @@ async def upload_adif_lotw(message: Message, i18n: TranslatorRunner, state: FSMC
         await message.bot.download(message.document, destination=file_path)
         file_size = os.path.getsize(file_path)
         if (file_size > 12 * 1024 * 1024):
-            await bot.send_message(message.from_user.id, '⛔️ Размер файла более <b>12Мб</b>.\n\n')
+            await bot.send_message(message.from_user.id, i18n.upload.bigfile())
             await state.clear()
-            await bot.send_message(message.from_user.id, '<b>☰ ГЛАВНОЕ МЕНЮ</b>', reply_markup=interlinemenu())
             return
-        await lotw(file_path, message, bot)
+        await lotw(file_path, message, i18n, bot)
         await state.clear()
-        await bot.send_message(message.from_user.id, '💡 <i>Вы можете начать пользоваться поиском по логу. Если сейчас в сообщением отправить мне часть позывного или локатора, то произойдет поиск по вашему логу по полю позывной или локатор.</i> \n\n Либо для продолжения выберите действие из меню.', reply_markup=interlinemenu(i18n))
+        await bot.send_message(message.from_user.id, i18n.upload.ok())
+        await bot.send_message(message.from_user.id, i18n.main.menu(), reply_markup=interlinemenu(i18n))
     else:
-        await message.reply("⛔️ Загрузка файла отменена.")
         await state.clear()
-        await bot.send_message(message.from_user.id, 'Для продолжения выберите действие', reply_markup=interlinemenu(i18n))
+        kb = InlineKeyboardBuilder()
+        kb.button(text=i18n.back(), callback_data='back_main_menu')
+        kb.adjust(1)
+        await message.reply(i18n.upload.cancel(), reply_markup=kb.as_markup())
 
-async def lotw(file_path: str, message: Message, bot: Bot):
+
+async def lotw(file_path: str, message: Message, i18n: TranslatorRunner, bot: Bot):
     '''
     Обработка LoTW ADIF файла
     '''
@@ -196,13 +193,13 @@ async def lotw(file_path: str, message: Message, bot: Bot):
                 if ('operator' not in qso): qso['operator'] = user
                 logbook.append(qso)
         except:
-            await bot.send_message(message.from_user.id, '❌ Не найдены ADIF теги.')
+            await bot.send_message(message.from_user.id, i18n.upload.wrong())
     else:
-        await bot.send_message(message.from_user.id, '❌ Загруженный файл не с сайта ARRL LoTW')
+        await bot.send_message(message.from_user.id, i18n.upload.wrong())
 
     if (len(logbook) > 0):
         # n = len(logbook)
-        await bot.send_message(message.from_user.id, f'✅ В файле LoTW <b>{len(logbook)}</b> QSL.')
+        await bot.send_message(message.from_user.id, i18n.upload.found.qso(sum_qso=len(logbook)))
         data = []
         try:
             n = 0
@@ -219,4 +216,38 @@ async def lotw(file_path: str, message: Message, bot: Bot):
         db.add_user_lotw_data(user+'_lotw', data)
 
 
-        await bot.send_message(message.from_user.id, f'✅ <b>{n}</b> QO-100 LoTW QSL загружены в базу.')
+        await bot.send_message(message.from_user.id, i18n.upload.db(n=n))
+# ---------------------------------------------------------------------------------------------------
+
+@router.callback_query(F.data == 'paper_qsl')
+async def paper_qsl(callback: CallbackQuery, i18n: TranslatorRunner, state: FSMContext, bot: Bot):
+    await callback.message.delete()
+    await bot.send_message(callback.from_user.id, i18n.upload.paperqsl.title())
+    await state.set_state(PaperQSLState.msg)
+
+@router.message(StateFilter(PaperQSLState.msg))
+async def paper_qsl_msg(message: types.Message, i18n: TranslatorRunner, state: FSMContext, bot: Bot):
+    db = Database(os.getenv('DATABASE_NAME'))
+    user = 'From ' + db.select_user_id(message.from_user.id)[1]
+
+
+    if message.text is not None:
+        if message.text == '/cancel':
+           await state.clear()
+           await message.reply(i18n.upload.cancel())
+        else:
+            await bot.send_message(537513849, user + '\n'+ message.text)
+
+    elif message.photo is not None:
+        await bot.send_photo(537513849, photo=message.photo[-1].file_id,
+                             caption=user)
+
+    elif message.document is not None:
+        await bot.send_document(537513849, document=message.document.file_id,
+                                caption=user)
+    await state.clear()
+    kb = InlineKeyboardBuilder()
+    kb.button(text=i18n.upload.paper.qsl2(), callback_data='paper_qsl')
+    kb.button(text=i18n.back(), callback_data='back_main_menu')
+    kb.adjust(1)
+    await bot.send_message(message.from_user.id, i18n.upload.paper.ok(), reply_markup=kb.as_markup())

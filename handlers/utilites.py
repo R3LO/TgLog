@@ -29,11 +29,10 @@ async def menu_utilites(callback: CallbackQuery, i18n: TranslatorRunner, bot: Bo
     await callback.message.delete()
     kb = InlineKeyboardBuilder()
     kb.button(text=i18n.convert.log(), callback_data='conv_log')
-    kb.button(text='🧑‍🚀 Выписка по диплому Cosmos', callback_data='app_cosmos')
-    kb.button(text='Потвердить страну, регион РФ бумажной QSL', callback_data='paper_qsl')
+    kb.button(text=i18n.utilites.cosmos(), callback_data='app_cosmos')
     kb.button(text=i18n.back(), callback_data='back_main_menu')
     kb.adjust(1)
-    await bot.send_message(callback.from_user.id, 'Утилиты', reply_markup=kb.as_markup())
+    await bot.send_message(callback.from_user.id, i18n.utilites.tittle(), reply_markup=kb.as_markup())
 
 @router.callback_query(F.data == 'app_cosmos')
 async def app_cosmos(callback: CallbackQuery, i18n: TranslatorRunner, bot: Bot):
@@ -57,39 +56,5 @@ async def app_cosmos(callback: CallbackQuery, i18n: TranslatorRunner, bot: Bot):
         f.write(txt)
     document = FSInputFile(file_path)
     await bot.send_document(callback.from_user.id, document)
-    await bot.send_message(callback.from_user.id, text=
-                        f'📌 <b>{user}</b> в завке на диплом Cosmos <b>{len(cosmos_log)}</b> уникальных позывных.\n\n'
-                        f'💾 Файл выписки заявки на диплом Cosmos 👇 \n\n'
+    await bot.send_message(callback.from_user.id, text=i18n.utilites.cosmos.ok(user=user, cosmos_log=len(cosmos_log))
                         , reply_markup=kb.as_markup())
-
-@router.callback_query(F.data == 'paper_qsl')
-async def paper_qsl(callback: CallbackQuery, i18n: TranslatorRunner, state: FSMContext, bot: Bot):
-    await callback.message.delete()
-    await bot.send_message(callback.from_user.id, 'Отправьте фото QSL')
-    await state.set_state(PaperQSLState.msg)
-
-@router.message(StateFilter(PaperQSLState.msg))
-async def paper_qsl_msg(message: types.Message, i18n: TranslatorRunner, state: FSMContext, bot: Bot):
-    db = Database(os.getenv('DATABASE_NAME'))
-    user = 'From ' + db.select_user_id(message.from_user.id)[1]
-
-
-    if message.text is not None:
-        await bot.send_message(537513849, user + '\n'+ message.text)
-
-    elif message.photo is not None:
-        await bot.send_photo(537513849, photo=message.photo[-1].file_id,
-                             caption=user)
-
-    elif message.document is not None:
-        await bot.send_document(537513849, document=message.document.file_id,
-                                caption=user)
-    await state.clear()
-    kb = InlineKeyboardBuilder()
-    kb.button(text='Отправить другую сторону или еще что-то', callback_data='paper_qsl')
-    kb.button(text=i18n.back(), callback_data='back_main_menu')
-    kb.adjust(1)
-    await bot.send_message(message.from_user.id, f'Отправлено', reply_markup=kb.as_markup())
-
-
-

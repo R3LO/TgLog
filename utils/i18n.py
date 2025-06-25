@@ -6,7 +6,7 @@ from fluentogram import FluentTranslator, TranslatorHub
 def create_translator_hub() -> TranslatorHub:
     translator_hub = TranslatorHub(
         {
-            # "ru": ("ru", "en"),
+            "ru": ("ru", "en"),
             "en": ("en", "ru")
         },
         [

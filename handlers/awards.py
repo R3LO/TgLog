@@ -26,7 +26,7 @@ async def main_menu_awards(callback: CallbackQuery, i18n: TranslatorRunner, bot:
     user = db.select_user_id(callback.from_user.id)[1]
     kb = InlineKeyboardBuilder()
     # W-QO100-R
-    rus = len(db.get_stat_ru(user)) # количество RU
+    rus = len(db.get_stat_ruru(user)) # количество RU
     rus_award_number =db.check_call_diplomas(user, 'w25r') # кортеж номер диплома
     if rus >= 25 and rus_award_number[0] != 0: # выполнен и получен
         kb.button(text=f'🏆 W-QO100-R # {rus_award_number[0]}', callback_data='dip_qo100_russia')
@@ -100,7 +100,7 @@ async def dip_qo100_russia(callback: CallbackQuery, i18n: TranslatorRunner, bot:
     db = Database(os.getenv('DATABASE_NAME'))
     user = db.select_user_id(callback.from_user.id)[1]
     last_number = db.get_last_number_diplomas('w25r')[1]
-    q_rus = len(db.get_stat_ru(user))
+    q_rus = len(db.get_stat_ruru(user))
     kb = InlineKeyboardBuilder()
     if q_rus >= 25:
         kb.button(text=i18n.awards.pdf(), callback_data='get_pdf_w25r')
@@ -227,7 +227,7 @@ async def pdf_w25r(callback: CallbackQuery, i18n: TranslatorRunner, bot: Bot):
     res =db.check_call_diplomas(user[1], 'w25r')
     # print('user', user)
     # print('res', res)
-    rus = len(db.get_stat_ru(user[1]))
+    rus = len(db.get_stat_ruru(user[1]))
     # print('rus', rus)
     create_w25r_pdf(user[1], user[2], res[0], rus, i18n)
     await bot.send_message(callback.from_user.id, text=i18n.awards.qrx())

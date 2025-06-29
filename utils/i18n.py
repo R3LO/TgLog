@@ -4,6 +4,9 @@ from fluentogram import FluentTranslator, TranslatorHub
 
 
 def create_translator_hub() -> TranslatorHub:
+    # import pathlib
+    # p = pathlib.Path(__file__)
+    # print(p.parents[0])
     translator_hub = TranslatorHub(
         {
             "ru": ("ru", "en"),

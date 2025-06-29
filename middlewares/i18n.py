@@ -23,5 +23,5 @@ class TranslatorRunnerMiddleware(BaseMiddleware):
 
         hub: TranslatorHub = data.get('_translator_hub')
         data['i18n'] = hub.get_translator_by_locale(locale=user.language_code)
-
+        
         return await handler(event, data)

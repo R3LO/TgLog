@@ -182,7 +182,6 @@ async def get_cq(callback: CallbackQuery, i18n: TranslatorRunner, bot: Bot):
 async def get_russia(callback: CallbackQuery, i18n: TranslatorRunner, bot: Bot):
     db = Database(os.getenv('DATABASE_NAME'))
     user = db.select_user_id(callback.from_user.id)[1]
-    # user = 'VU2DPN'
     kb = InlineKeyboardBuilder()
     kb.button(text=i18n.back(), callback_data='log_info')
     try:

@@ -157,10 +157,30 @@ class Database():
         self.cursor.executemany(f'INSERT OR REPLACE INTO {user_call} (call, band, mode, qso_date, time_on, prop_mode, sat_name, qsl_rcvd, dxcc, country, gridsquare, state, cqz, ituz, operator) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)', data)
         self.connection.commit()
 
+    def check_for_tlog(self, user, call, date, time, band, mode):
+        date = date[6:10]  + '-' + date[3:5] + '-' + date[0:2]
+        time = time[0:2] + ':' + time[3:5]
+        query = f'''
+            SELECT * FROM "{user}"
+            WHERE call = "{call}"
+                and date(qso_date) = date("{date}")
+                and band = "{band}"
+                and mode = "{mode}"
+                and time(time_on) BETWEEN  time("{time}", "-30 minutes") and time("{time}", "+30 minutes")
+            ;
+            '''
+        chk = self.cursor.execute(query)
+        result = chk.fetchall()
+        if (len(result)) > 0:
+            return True
+        else:
+            return False
+
+
     def search_qso_data(self, user_call, data):
         lotw = user_call + '_lotw'
         query = f'''
-            SELECT date({user_call}.qso_date), {user_call}.call, {user_call}.band, {user_call}.mode,
+            SELECT date({user_call}.qso_date), time({user_call}.time_on), {user_call}.call, {user_call}.band, {user_call}.mode,
             substr(
                 IIF(t2.gridsquare not Null, t2.gridsquare,
                     IIF(t2.gridsquare = '', t2.gridsquare,
@@ -311,6 +331,16 @@ class Database():
                     '''
         stat = self.cursor.execute(query_qsos)
         return stat.fetchall()
+
+    def check_exist_table(self, table):
+        chk_table = f'''SELECT name FROM sqlite_master WHERE type='table' AND name='{table}';'''
+        check = self.cursor.execute(chk_table)
+        if len(check.fetchall()) > 0:
+            return True
+        else:
+            return False
+
+
 
     def get_stat_ruen(self, user_call):
         lotw = user_call + '_lotw'

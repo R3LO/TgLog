@@ -27,7 +27,11 @@ async def process_start_command(message: Message, i18n: TranslatorRunner, bot: B
     db = Database(os.getenv('DATABASE_NAME'))
     users = db.select_user_id(message.from_user.id)
     if (users):
-        await bot.send_message(message.from_user.id, text=i18n.main.menu(), reply_markup=interlinemenu(i18n))
+        # print(users)
+        if users[5] == 'N':
+            await bot.send_message(message.from_user.id, text=i18n.main.menu(), reply_markup=interlinemenu(i18n))
+        else:
+            await bot.send_message(message.from_user.id, text='🔎 Please wait...')
     else:
         kb = InlineKeyboardBuilder()
         kb.button(text=i18n.registration.button(), callback_data='new_user_registration')
@@ -39,4 +43,3 @@ async def process_start_command(message: Message, i18n: TranslatorRunner, bot: B
 @router.message(Command(commands='help'))
 async def process_help_command(message: Message):
     await message.answer(text='help')
-

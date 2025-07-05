@@ -12,7 +12,10 @@ class Database():
                      'id INTEGER PRIMARY KEY,'
                      'user_call TEXT UNIQUE,'
                      'user_name TEXT,'
-                     'telegram_id TEXT);'
+                     'telegram_id TEXT UNIQUE,'
+                     'operator TEXT,'
+                     'blocked TEXT NOT NULL DEFAULT N);'
+
 
                      'CREATE TABLE IF NOT EXISTS w100c('
                      'call TEXT UNIQUE PRIMARY KEY,'
@@ -109,7 +112,8 @@ class Database():
                      operator TEXT,
                      rst_rcvd TEXT,
                      rst_sent TEXT,
-                     PRIMARY KEY(qso_date, time_on, band, mode, call));
+                     PRIMARY KEY(qso_date, band, mode, call));
+                     -- PRIMARY KEY(qso_date, time_on, band, mode, call));
 
                      CREATE TABLE IF NOT EXISTS {user_call+'_lotw'}(
                      qso_date TEXT,
@@ -128,7 +132,9 @@ class Database():
                      ituz INTEGER,
                      operator TEXT,
                      paper_qsl TEXT DEFAULT N,
-                     PRIMARY KEY(qso_date, time_on, band, mode, call));''')
+                     --PRIMARY KEY(qso_date, band, mode, call));
+                     PRIMARY KEY(qso_date, time_on, band, mode, call));
+                     ''')
 
             self.cursor.executescript(query)
             self.connection.commit()
@@ -138,6 +144,7 @@ class Database():
     def select_user_id(self, telegram_id):
         users = self.cursor.execute('SELECT * FROM users WHERE telegram_id = ?', (telegram_id,))
         return users.fetchone()
+
 
     def add_user_qso_data(self, user_call, data):
         '''
@@ -161,8 +168,8 @@ class Database():
         date = date[6:10]  + '-' + date[3:5] + '-' + date[0:2]
         time = time[0:2] + ':' + time[3:5]
         query = f'''
-            SELECT * FROM "{user}"
-            WHERE call = "{call}"
+            SELECT * FROM "{call}"
+            WHERE call = "{user}"
                 and date(qso_date) = date("{date}")
                 and band = "{band}"
                 and mode = "{mode}"
@@ -171,6 +178,8 @@ class Database():
             '''
         chk = self.cursor.execute(query)
         result = chk.fetchall()
+        # print(user, call, date, time, band, mode)
+        # print(result)
         if (len(result)) > 0:
             return True
         else:

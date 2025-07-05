@@ -74,6 +74,7 @@ async def dwnl_log_adif(callback: CallbackQuery, i18n: TranslatorRunner, bot: Bo
             L = f'TLog ADIF export file for {user}\n<EOH>\n'
             f.writelines(L)
             for i in range(len(qsos)):
+                # print(qsos[i])
                 L = ''
                 L += f'<CALL:{len(qsos[i][4].strip())}>{qsos[i][4].strip()} '
                 qso_date = qsos[i][0].replace('-', '')
@@ -82,8 +83,13 @@ async def dwnl_log_adif(callback: CallbackQuery, i18n: TranslatorRunner, bot: Bo
                 L += f'<TIME_ON:{len(time_on)}>{time_on} '
                 L += f'<BAND:{len(qsos[i][2].strip())}>{qsos[i][2].strip()} '
                 L += f'<MODE:{len(qsos[i][3].strip())}>{qsos[i][3].strip()} '
+                # L += f'<RST_RCVD:{len(rst_rcvd)}>{qso_date} '
                 if qsos[i][5] is not None:
                     L += f'<GRIDSQUARE:{len(qsos[i][5].strip())}>{qsos[i][5].strip()} '
+                if qsos[i][7] is not None:
+                    L += f'<RST_RCVD:{len(qsos[i][7].strip())}>{qsos[i][7].strip()} '
+                if qsos[i][8] is not None:
+                    L += f'<RST_SENT:{len(qsos[i][8].strip())}>{qsos[i][8].strip()} '
                 L += f'<OPERATOR:{len(qsos[i][6].strip())}>{qsos[i][6].strip()} '
                 L += f'<PROP_MODE:3>SAT <SAT_NAME:6>QO-100 <EOR>\n'
                 f.writelines(L)

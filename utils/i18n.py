@@ -9,7 +9,7 @@ def create_translator_hub() -> TranslatorHub:
     # print(p.parents[0])
     translator_hub = TranslatorHub(
         {
-            "ru": ("ru", "en"),
+            # "ru": ("ru", "en"),
             "en": ("en", "ru")
         },
         [

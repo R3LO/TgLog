@@ -51,7 +51,7 @@ async def res_db(user: str, message: Message, m: str, i18n: TranslatorRunner, bo
                     qsl = ''
                 else: qsl = '[L]'
                 # # msg += f'➡️ <b>{call}</b> ◽️ {date} ◽️ {band} ◽️ {mode} ◽️ <b>{loc}</b> <b>{qsl}</b>\n'
-                if (check_tlog(user, call, date, time, band, mode)):
+                if (await check_tlog(user, call, date, time, band, mode) == True):
                     tlog = '[T]'
                 else:
                     tlog = ''
@@ -65,7 +65,7 @@ async def res_db(user: str, message: Message, m: str, i18n: TranslatorRunner, bo
     except:
         await bot.send_message(message.from_user.id, f'{user.upper()}: '  + i18n.search.no.result(m=m))
 
-def check_tlog(user, call, date, time, band, mode):
+async def check_tlog(user, call, date, time, band, mode):
     db = Database(os.getenv('DATABASE_NAME'))
     chck_table = db.check_exist_table(call)
     if chck_table:

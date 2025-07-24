@@ -58,9 +58,14 @@ async def ranking_russia(callback: CallbackQuery, i18n: TranslatorRunner, bot: B
         query_ru = f'''
                 select count(*) as ru from (
                         SELECT state from {table[0]}
-                        WHERE country in ('EUROPEAN RUSSIA', 'ASIATIC RUSSIA', 'KALININGRAD')
+                        WHERE country in ('EUROPEAN RUSSIA', 'ASIATIC RUSSIA')
                         GROUP BY state
                         HAVING state <> ''
+                        UNION
+                        SELECT state from {table[0]}
+                        WHERE country = 'KALININGRAD'
+                        GROUP BY state
+                        -- HAVING state <> ''
                         ORDER BY state ASC
                         )
                 '''

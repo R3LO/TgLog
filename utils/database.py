@@ -336,7 +336,15 @@ class Database():
                     WHERE country in ('EUROPEAN RUSSIA', 'ASIATIC RUSSIA', 'KALININGRAD')
                     GROUP BY state
                     HAVING state <> ''
-                    ORDER BY description ASC;
+                    -- ORDER BY description ASC
+                    UNION
+                    SELECT 'Калининградская обл.', call from {lotw}
+                    -- LEFT JOIN rda_reg_en rr ON R3LO_lotw.state = rr.rda
+                    WHERE country = 'KALININGRAD'
+                    GROUP BY state
+                    --HAVING state <> ''
+                    ORDER BY description ASC
+                    ;
                     '''
         stat = self.cursor.execute(query_qsos)
         return stat.fetchall()
@@ -359,7 +367,15 @@ class Database():
                     WHERE country in ('EUROPEAN RUSSIA', 'ASIATIC RUSSIA', 'KALININGRAD')
                     GROUP BY state
                     HAVING state <> ''
-                    ORDER BY description ASC;
+                    --ORDER BY description ASC
+                    UNION
+                    SELECT 'Kaliningrad', call from {lotw}
+                    -- LEFT JOIN rda_reg_en rr ON R3LO_lotw.state = rr.rda
+                    WHERE country = 'KALININGRAD'
+                    GROUP BY state
+                    --HAVING state <> ''
+                    ORDER BY description ASC
+                    ;
                     '''
         stat = self.cursor.execute(query_qsos)
         return stat.fetchall()

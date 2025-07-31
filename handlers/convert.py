@@ -68,7 +68,10 @@ async def conv_adif_process(file_log: str, user, message: Message, i18n: Transla
             tags = ADIF_REC_RE.findall(record)
             for tag in tags:
                 qso[tag[0].lower()] = tag[2][:int(tag[1])]
-            # if ('gridsquare' not in qso): qso['gridsquare'] = ' '
+            if ('sat_mode' in qso): qso['sat_mode'] = 'SX'
+            if ('sat_name' in qso): del qso['sat_name']
+            if ('prop_mode' in qso): del qso['prop_mode']
+
             logbook.append(qso)
     except:
         await bot.send_message(message.from_user.id, i18n.convert.wrongfile())

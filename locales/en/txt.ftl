@@ -77,7 +77,7 @@ ranking-dxcc = 🌐 DXCC Counties
 
 ranking-rus = 🇷🇺 Russian regions
 
-ranking-based = <i>[ Based on LoTW report ]</i>
+ranking-based = <i>[ Based on LoTW and paper QSL report ]</i>
 
 # -------------------------------------- Awards --------------------------------------
 

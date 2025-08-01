@@ -77,7 +77,7 @@ async def ranking_russia(callback: CallbackQuery, i18n: TranslatorRunner, bot: B
         dict_ru_sorted = sorted(dict_ru.items(), key=lambda item: item[1], reverse=True)
     for i in range(len(dict_ru_sorted)):
         msg = msg + f'{i+1} <b>{dict_ru_sorted[i][0]}</b> {dict_ru_sorted[i][1]}\n'
-    await bot.send_message(callback.from_user.id, text=i18n.ranking.title() + '\n\n' + i18n.ranking.rus() + ' ' + i18n.ranking.based() + '\n\n' + msg, reply_markup=kb.as_markup())
+    await bot.send_message(callback.from_user.id, text=i18n.ranking.title() + '\n\n' + i18n.ranking.rus() + '\n' + i18n.ranking.based() + '\n\n' + msg, reply_markup=kb.as_markup())
     conn.close()
 
 # -------------------------------------------------------------------------------------
@@ -119,7 +119,7 @@ async def ranking_dxcc(callback: CallbackQuery, i18n: TranslatorRunner, bot: Bot
         dict_states_sorted = sorted(dict_states.items(), key=lambda item: item[1], reverse=True)
     for i in range(len(dict_states_sorted)):
         msg = msg + f'{i+1} <b>{dict_states_sorted[i][0]}</b> {dict_states_sorted[i][1]}\n'
-    await bot.send_message(callback.from_user.id, text=i18n.ranking.title() + '\n\n' + i18n.ranking.dxcc() + ' ' + i18n.ranking.based() + '\n\n' + msg, reply_markup=kb.as_markup())
+    await bot.send_message(callback.from_user.id, text=i18n.ranking.title() + '\n\n' + i18n.ranking.dxcc() + '\n' + i18n.ranking.based() + '\n\n' + msg, reply_markup=kb.as_markup())
     conn.close()
 
 # -------------------------------------------------------------------------------------
@@ -160,7 +160,7 @@ async def ranking_loc(callback: CallbackQuery, i18n: TranslatorRunner, bot: Bot)
         dict_loc_sorted = sorted(dict_loc.items(), key=lambda item: item[1], reverse=True)
     for i in range(len(dict_loc_sorted)):
         msg = msg + f'{i+1} <b>{dict_loc_sorted[i][0]}</b> {dict_loc_sorted[i][1]}\n'
-    await bot.send_message(callback.from_user.id, text= i18n.ranking.title() + '\n\n' + i18n.ranking.qthloc() + ' ' + i18n.ranking.based() + '\n\n' + msg, reply_markup=kb.as_markup())
+    await bot.send_message(callback.from_user.id, text= i18n.ranking.title() + '\n\n' + i18n.ranking.qthloc() + '\n' + i18n.ranking.based() + '\n\n' + msg, reply_markup=kb.as_markup())
     conn.close()
 
 # -------------------------------------------------------------------------------------
@@ -200,7 +200,7 @@ async def ranking_unique(callback: CallbackQuery, i18n: TranslatorRunner, bot: B
         dict_unique_sorted = sorted(dict_unique.items(), key=lambda item: item[1], reverse=True)
     for i in range(len(dict_unique_sorted)):
         msg = msg + f'{i+1} <b>{dict_unique_sorted[i][0]}</b> {dict_unique_sorted[i][1]}\n'
-    await bot.send_message(callback.from_user.id, text=i18n.ranking.title() + '\n\n' + i18n.ranking.unique() + ' ' + i18n.ranking.based() + '\n\n' + msg, reply_markup=kb.as_markup())
+    await bot.send_message(callback.from_user.id, text=i18n.ranking.title() + '\n\n' + i18n.ranking.unique() + '\n' + i18n.ranking.based() + '\n\n' + msg, reply_markup=kb.as_markup())
     conn.close()
 
 # -------------------------------------------------------------------------------------

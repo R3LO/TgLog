@@ -191,7 +191,15 @@ async def lotw(file_path: str, message: Message, i18n: TranslatorRunner, bot: Bo
                 if ('gridsquare' not in qso): qso['gridsquare'] = None
                 if ('state' not in qso): qso['state'] = None
                 if ('operator' not in qso): qso['operator'] = user
-                logbook.append(qso)
+                if ('vucc_grids' in qso):
+                    for vucc in qso['vucc_grids'].split(','):
+                        qso1 = qso.copy()
+                        qso1['gridsquare'] = vucc
+                        logbook.append(qso1)
+                else:
+                    # print(1)
+                    logbook.append(qso)
+            # print(logbook)
         except:
             await bot.send_message(message.from_user.id, i18n.upload.wrong())
     else:

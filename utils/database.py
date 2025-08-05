@@ -133,7 +133,7 @@ class Database():
                      operator TEXT,
                      paper_qsl TEXT DEFAULT N,
                      --PRIMARY KEY(qso_date, band, mode, call));
-                     PRIMARY KEY(qso_date, time_on, band, mode, call));
+                     PRIMARY KEY(qso_date, time_on, band, mode, call, gridsquare));
                      ''')
 
             self.cursor.executescript(query)

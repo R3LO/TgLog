@@ -52,7 +52,8 @@ async def register_call(message: Message, i18n: TranslatorRunner, state: FSMCont
     await bot.send_message(message.from_user.id, i18n.regist.name(reg_call=reg_call))
     await state.set_state(RegisterState.regName)
 
-@router.message(StateFilter(RegisterState.regName), F.text.isalpha())
+# @router.message(StateFilter(RegisterState.regName), F.text.isalpha())
+@router.message(StateFilter(RegisterState.regName))
 async def register_name(message: Message, i18n: TranslatorRunner, state: FSMContext, bot: Bot):
     await state.update_data(regname=message.text)
 

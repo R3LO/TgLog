@@ -113,7 +113,7 @@ class Database():
                      rst_rcvd TEXT,
                      rst_sent TEXT,
                      PRIMARY KEY(qso_date, band, mode, call));
-                     -- PRIMARY KEY(qso_date, time_on, band, mode, call));
+                     -- PRIMARY KEY(qso_date, time_on, band, mode, call, gridsquare));
 
                      CREATE TABLE IF NOT EXISTS {user_call+'_lotw'}(
                      qso_date TEXT,
